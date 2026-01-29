@@ -15,6 +15,7 @@ public class Enemy : MonoBehaviour
     
     private float forwardSpeed = 10f;
     private GameManager gameManager;
+    private static Material redMaterial; // Shared material for all enemies
     
     void Start()
     {
@@ -32,8 +33,8 @@ public class Enemy : MonoBehaviour
     
     void Update()
     {
-        // Don't move if game is over
-        if (gameManager != null && gameManager.IsGameOver())
+        // Don't move if game is over - cache check to avoid repeated null checks
+        if (gameManager == null || gameManager.IsGameOver())
         {
             return;
         }
@@ -50,14 +51,17 @@ public class Enemy : MonoBehaviour
     
     public void SetupEnemy()
     {
-        // Set color to red
+        // Set color to red - use shared material to avoid allocations
         Renderer renderer = GetComponent<Renderer>();
         if (renderer != null)
         {
-            // Create new material instance to avoid affecting other objects
-            Material mat = new Material(renderer.material);
-            mat.color = Color.red;
-            renderer.material = mat;
+            // Create shared material only once
+            if (redMaterial == null)
+            {
+                redMaterial = new Material(Shader.Find("Standard"));
+                redMaterial.color = Color.red;
+            }
+            renderer.material = redMaterial;
         }
         
         // Position based on enemy type

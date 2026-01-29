@@ -5,6 +5,7 @@ public class Coin : MonoBehaviour
     private float forwardSpeed = 10f;
     private GameManager gameManager;
     private float rotationSpeed = 180f;
+    private static Material yellowMaterial; // Shared material for all coins
     
     void Start()
     {
@@ -14,14 +15,17 @@ public class Coin : MonoBehaviour
             forwardSpeed = gameManager.GetForwardSpeed();
         }
         
-        // Make coin yellow/gold
+        // Make coin yellow/gold - use shared material to avoid allocations
         Renderer renderer = GetComponent<Renderer>();
         if (renderer != null)
         {
-            // Create new material instance to avoid affecting other objects
-            Material mat = new Material(renderer.material);
-            mat.color = Color.yellow;
-            renderer.material = mat;
+            // Create shared material only once
+            if (yellowMaterial == null)
+            {
+                yellowMaterial = new Material(Shader.Find("Standard"));
+                yellowMaterial.color = Color.yellow;
+            }
+            renderer.material = yellowMaterial;
         }
         
         // Add collider if not present
@@ -52,8 +56,8 @@ public class Coin : MonoBehaviour
     
     void Update()
     {
-        // Don't move if game is over
-        if (gameManager != null && gameManager.IsGameOver())
+        // Don't move if game is over - cache check to avoid repeated null checks
+        if (gameManager == null || gameManager.IsGameOver())
         {
             return;
         }

@@ -211,12 +211,12 @@ public class GameManager : MonoBehaviour
     {
         if (livesText != null)
         {
-            livesText.text = "Lives: " + lives;
+            livesText.text = string.Concat("Lives: ", lives.ToString());
         }
         
         if (coinsText != null)
         {
-            coinsText.text = "Coins: " + coins;
+            coinsText.text = string.Concat("Coins: ", coins.ToString());
         }
     }
     
@@ -377,7 +377,7 @@ public class GameManager : MonoBehaviour
         // Update score text
         if (scoreText != null)
         {
-            scoreText.text = "Score: " + coins;
+            scoreText.text = string.Concat("Score: ", coins.ToString());
         }
         
         // Show the panel
