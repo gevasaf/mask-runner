@@ -102,7 +102,45 @@ public class Player : MonoBehaviour
                     break;
             }
         }
+        
+#if UNITY_EDITOR
+        // Keyboard controls for development (only in Unity Editor)
+        HandleKeyboardInput();
+#endif
     }
+    
+#if UNITY_EDITOR
+    void HandleKeyboardInput()
+    {
+        // Jump: Up Arrow, W, or Space
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
+        {
+            if (!isJumping && !isSliding)
+                StartCoroutine(Jump());
+        }
+        
+        // Slide: Down Arrow or S
+        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+        {
+            if (!isJumping && !isSliding)
+                StartCoroutine(Slide());
+        }
+        
+        // Left Lane: Left Arrow or A
+        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+        {
+            if (!isJumping && !isSliding)
+                ChangeLane(-1);
+        }
+        
+        // Right Lane: Right Arrow or D
+        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+        {
+            if (!isJumping && !isSliding)
+                ChangeLane(1);
+        }
+    }
+#endif
     
     void UpdateMovement()
     {
