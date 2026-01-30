@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour
 {
@@ -16,10 +14,6 @@ public class GameManager : MonoBehaviour
     public GameObject enemyPrefab;
     public GameObject coinPrefab;
     
-    [Header("UI References")]
-    public Text livesText;
-    public Text coinsText;
-    
     [Header("Player Reference")]
     public Transform player;
     
@@ -28,18 +22,17 @@ public class GameManager : MonoBehaviour
     private float nextSpawnTime = 0f;
     private bool isGameOver = false;
     
-    // Game Over UI
-    private GameObject gameOverPanel;
-    private Text gameOverText;
-    private Text scoreText;
-    private Button restartButton;
+    // UI Manager reference
+    private UIManager uiManager;
     
     void Start()
     {
-        // Create UI if not assigned
-        if (livesText == null || coinsText == null)
+        // Find or create UI Manager
+        uiManager = UIManager.Instance;
+        if (uiManager == null)
         {
-            CreateUI();
+            GameObject uiManagerObj = new GameObject("UIManager");
+            uiManager = uiManagerObj.AddComponent<UIManager>();
         }
         
         // Find player if not assigned
@@ -62,14 +55,11 @@ public class GameManager : MonoBehaviour
             CreateCoinPrefab();
         }
         
-        // Create game over UI (but keep it hidden initially)
-        CreateGameOverUI();
-        if (gameOverPanel != null)
+        // Initialize UI
+        if (uiManager != null)
         {
-            gameOverPanel.SetActive(false);
+            uiManager.UpdateUI(lives, coins);
         }
-        
-        UpdateUI();
     }
     
     void Update()
@@ -193,7 +183,12 @@ public class GameManager : MonoBehaviour
             return;
             
         lives--;
-        UpdateUI();
+        
+        // Update UI through UIManager
+        if (uiManager != null)
+        {
+            uiManager.UpdateLives(lives);
+        }
         
         if (lives <= 0)
         {
@@ -204,26 +199,23 @@ public class GameManager : MonoBehaviour
     public void CollectCoin()
     {
         coins++;
-        UpdateUI();
-    }
-    
-    void UpdateUI()
-    {
-        if (livesText != null)
-        {
-            livesText.text = string.Concat("Lives: ", lives.ToString());
-        }
         
-        if (coinsText != null)
+        // Update UI through UIManager
+        if (uiManager != null)
         {
-            coinsText.text = string.Concat("Coins: ", coins.ToString());
+            uiManager.UpdateCoins(coins);
         }
     }
     
     void GameOver()
     {
         isGameOver = true;
-        ShowGameOverUI();
+        
+        // Show game over UI through UIManager
+        if (uiManager != null)
+        {
+            uiManager.ShowGameOver(coins);
+        }
         
         // Stop player input
         Player playerScript = FindObjectOfType<Player>();
@@ -246,151 +238,6 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    void CreateGameOverUI()
-    {
-        GameObject canvasObj = GameObject.Find("Canvas");
-        if (canvasObj == null)
-        {
-            canvasObj = new GameObject("Canvas");
-            Canvas canvas = canvasObj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObj.AddComponent<CanvasScaler>();
-            canvasObj.AddComponent<GraphicRaycaster>();
-        }
-        
-        // Ensure EventSystem exists for button clicks
-        if (FindObjectOfType<EventSystem>() == null)
-        {
-            GameObject eventSystemObj = new GameObject("EventSystem");
-            eventSystemObj.AddComponent<EventSystem>();
-            eventSystemObj.AddComponent<StandaloneInputModule>();
-        }
-        
-        // Create Game Over Panel
-        if (gameOverPanel == null)
-        {
-            gameOverPanel = new GameObject("GameOverPanel");
-            gameOverPanel.transform.SetParent(canvasObj.transform);
-            
-            Image panelImage = gameOverPanel.AddComponent<Image>();
-            panelImage.color = new Color(0, 0, 0, 0.8f); // Semi-transparent black background
-            
-            RectTransform panelRect = gameOverPanel.GetComponent<RectTransform>();
-            panelRect.anchorMin = Vector2.zero;
-            panelRect.anchorMax = Vector2.one;
-            panelRect.sizeDelta = Vector2.zero;
-            panelRect.anchoredPosition = Vector2.zero;
-        }
-        
-        // Create Game Over Text
-        if (gameOverText == null)
-        {
-            GameObject gameOverObj = new GameObject("GameOverText");
-            gameOverObj.transform.SetParent(gameOverPanel.transform);
-            gameOverText = gameOverObj.AddComponent<Text>();
-            gameOverText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            gameOverText.fontSize = 48;
-            gameOverText.color = Color.white;
-            gameOverText.text = "GAME OVER";
-            gameOverText.alignment = TextAnchor.MiddleCenter;
-            
-            RectTransform rectTransform = gameOverObj.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = new Vector2(0, 100);
-            rectTransform.sizeDelta = new Vector2(400, 60);
-        }
-        
-        // Create Score Text
-        if (scoreText == null)
-        {
-            GameObject scoreObj = new GameObject("ScoreText");
-            scoreObj.transform.SetParent(gameOverPanel.transform);
-            scoreText = scoreObj.AddComponent<Text>();
-            scoreText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            scoreText.fontSize = 36;
-            scoreText.color = Color.yellow;
-            scoreText.text = "Score: " + coins;
-            scoreText.alignment = TextAnchor.MiddleCenter;
-            
-            RectTransform rectTransform = scoreObj.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-            rectTransform.pivot = new Vector2(0.5f, 0.5f);
-            rectTransform.anchoredPosition = new Vector2(0, 20);
-            rectTransform.sizeDelta = new Vector2(400, 50);
-        }
-        else
-        {
-            scoreText.text = "Score: " + coins;
-        }
-        
-        // Create Restart Button
-        if (restartButton == null)
-        {
-            GameObject buttonObj = new GameObject("RestartButton");
-            buttonObj.transform.SetParent(gameOverPanel.transform);
-            
-            Image buttonImage = buttonObj.AddComponent<Image>();
-            buttonImage.color = new Color(0.2f, 0.6f, 0.2f); // Green color
-            
-            restartButton = buttonObj.AddComponent<Button>();
-            
-            // Button text
-            GameObject buttonTextObj = new GameObject("Text");
-            buttonTextObj.transform.SetParent(buttonObj.transform);
-            Text buttonText = buttonTextObj.AddComponent<Text>();
-            buttonText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            buttonText.fontSize = 32;
-            buttonText.color = Color.white;
-            buttonText.text = "RESTART";
-            buttonText.alignment = TextAnchor.MiddleCenter;
-            buttonText.raycastTarget = false; // Don't block button clicks
-            
-            RectTransform buttonTextRect = buttonTextObj.GetComponent<RectTransform>();
-            buttonTextRect.anchorMin = Vector2.zero;
-            buttonTextRect.anchorMax = Vector2.one;
-            buttonTextRect.sizeDelta = Vector2.zero;
-            buttonTextRect.anchoredPosition = Vector2.zero;
-            
-            RectTransform buttonRect = buttonObj.GetComponent<RectTransform>();
-            buttonRect.anchorMin = new Vector2(0.5f, 0.5f);
-            buttonRect.anchorMax = new Vector2(0.5f, 0.5f);
-            buttonRect.pivot = new Vector2(0.5f, 0.5f);
-            buttonRect.anchoredPosition = new Vector2(0, -80);
-            buttonRect.sizeDelta = new Vector2(200, 60);
-            
-            // Add button listener
-            restartButton.onClick.AddListener(RestartGame);
-        }
-    }
-    
-    void ShowGameOverUI()
-    {
-        // Create UI if it doesn't exist
-        if (gameOverPanel == null)
-        {
-            CreateGameOverUI();
-        }
-        
-        // Update score text
-        if (scoreText != null)
-        {
-            scoreText.text = string.Concat("Score: ", coins.ToString());
-        }
-        
-        // Show the panel
-        gameOverPanel.SetActive(true);
-    }
-    
-    void HideGameOverUI()
-    {
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(false);
-        }
-    }
     
     public void RestartGame()
     {
@@ -402,8 +249,13 @@ public class GameManager : MonoBehaviour
         coins = 0;
         nextSpawnTime = Time.time + spawnInterval;
         
-        // Hide game over UI
-        HideGameOverUI();
+        // Hide game over UI through UIManager
+        if (uiManager != null)
+        {
+            uiManager.HideGameOver();
+            uiManager.HidePause(); // Ensure pause is also cleared on restart
+            uiManager.UpdateUI(lives, coins);
+        }
         
         // Reset player
         Player playerScript = FindObjectOfType<Player>();
@@ -416,9 +268,6 @@ public class GameManager : MonoBehaviour
                 player.position = new Vector3(0, player.position.y, player.position.z);
             }
         }
-        
-        // Update UI
-        UpdateUI();
     }
     
     public float GetForwardSpeed()
@@ -432,64 +281,14 @@ public class GameManager : MonoBehaviour
         return isGameOver;
     }
     
-    void CreateUI()
+    public int GetLives()
     {
-        // Create Canvas
-        GameObject canvasObj = GameObject.Find("Canvas");
-        if (canvasObj == null)
-        {
-            canvasObj = new GameObject("Canvas");
-            Canvas canvas = canvasObj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObj.AddComponent<CanvasScaler>();
-            canvasObj.AddComponent<GraphicRaycaster>();
-        }
-        
-        // Ensure EventSystem exists for button clicks
-        if (FindObjectOfType<EventSystem>() == null)
-        {
-            GameObject eventSystemObj = new GameObject("EventSystem");
-            eventSystemObj.AddComponent<EventSystem>();
-            eventSystemObj.AddComponent<StandaloneInputModule>();
-        }
-        
-        // Create Lives Text
-        if (livesText == null)
-        {
-            GameObject livesObj = new GameObject("LivesText");
-            livesObj.transform.SetParent(canvasObj.transform);
-            livesText = livesObj.AddComponent<Text>();
-            livesText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            livesText.fontSize = 24;
-            livesText.color = Color.white;
-            livesText.text = "Lives: 3";
-            
-            RectTransform rectTransform = livesObj.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0, 1);
-            rectTransform.anchorMax = new Vector2(0, 1);
-            rectTransform.pivot = new Vector2(0, 1);
-            rectTransform.anchoredPosition = new Vector2(10, -10);
-            rectTransform.sizeDelta = new Vector2(200, 30);
-        }
-        
-        // Create Coins Text
-        if (coinsText == null)
-        {
-            GameObject coinsObj = new GameObject("CoinsText");
-            coinsObj.transform.SetParent(canvasObj.transform);
-            coinsText = coinsObj.AddComponent<Text>();
-            coinsText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            coinsText.fontSize = 24;
-            coinsText.color = Color.white;
-            coinsText.text = "Coins: 0";
-            
-            RectTransform rectTransform = coinsObj.GetComponent<RectTransform>();
-            rectTransform.anchorMin = new Vector2(0, 1);
-            rectTransform.anchorMax = new Vector2(0, 1);
-            rectTransform.pivot = new Vector2(0, 1);
-            rectTransform.anchoredPosition = new Vector2(10, -50);
-            rectTransform.sizeDelta = new Vector2(200, 30);
-        }
+        return lives;
+    }
+    
+    public int GetCoins()
+    {
+        return coins;
     }
     
     void CreateEnemyPrefab()
