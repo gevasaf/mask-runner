@@ -100,3 +100,7 @@ My project/.vscode/
 
 # Plastic SCM
 My project/.plastic/
+
+# API keys / env (do not commit)
+.env
+.env.*
