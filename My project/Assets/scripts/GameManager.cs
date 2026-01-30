@@ -13,20 +13,38 @@ public class GameManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject enemyPrefab;
     public GameObject coinPrefab;
+    public GameObject powerUpPrefab;
     
     [Header("Player Reference")]
     public Transform player;
+    
+    [Header("Power-Up Settings")]
+    [Tooltip("Chance to spawn a power-up item (0.0 to 1.0)")]
+    [Range(0f, 1f)]
+    public float powerUpSpawnChance = 0.1f;
+    
+    [Header("Developer Settings")]
+    [Tooltip("Enable developer shortcuts (Z=MilkCup, X=ChocoCup, C=Bandage)")]
+    public bool enableDeveloperShortcuts = true;
     
     private int lives = 3;
     private int coins = 0;
     private float nextSpawnTime = 0f;
     private bool isGameOver = false;
     
+    // Power-up state
+    private float originalForwardSpeed;
+    private bool isSpeedBoostActive = false;
+    private bool isInvincible = false;
+    
     // UI Manager reference
     private UIManager uiManager;
     
     void Start()
     {
+        // Store original forward speed
+        originalForwardSpeed = forwardSpeed;
+        
         // Find or create UI Manager
         uiManager = UIManager.Instance;
         if (uiManager == null)
@@ -66,6 +84,12 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver)
             return;
+        
+        // Developer shortcuts for spawning power-ups
+        if (enableDeveloperShortcuts)
+        {
+            HandleDeveloperShortcuts();
+        }
             
         // Spawn obstacles and coins
         if (Time.time >= nextSpawnTime)
@@ -75,9 +99,36 @@ public class GameManager : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Handle developer keyboard shortcuts for spawning power-ups
+    /// </summary>
+    void HandleDeveloperShortcuts()
+    {
+        float spawnZ = player != null ? player.position.z + 10f : 10f; // Spawn slightly ahead of player
+        
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            // Spawn MilkCup
+            SpawnPowerUpItem(PowerUpItem.ItemType.MilkCup, spawnZ);
+        }
+        else if (Input.GetKeyDown(KeyCode.X))
+        {
+            // Spawn ChocoCup
+            SpawnPowerUpItem(PowerUpItem.ItemType.ChocoCup, spawnZ);
+        }
+        else if (Input.GetKeyDown(KeyCode.C))
+        {
+            // Spawn Bandage
+            SpawnPowerUpItem(PowerUpItem.ItemType.Bandage, spawnZ);
+        }
+    }
+    
     void SpawnObstacles()
     {
         float spawnZ = player != null ? player.position.z + spawnDistance : spawnDistance;
+        
+        // Try to spawn a power-up item (rare)
+        SpawnItem(spawnZ);
         
         // Randomly decide what to spawn
         int spawnType = Random.Range(0, 4);
@@ -181,6 +232,10 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver)
             return;
+        
+        // Don't take damage if invincible
+        if (isInvincible)
+            return;
             
         lives--;
         
@@ -224,7 +279,7 @@ public class GameManager : MonoBehaviour
             playerScript.SetGameOver(true);
         }
         
-        // Destroy all existing enemies and coins
+        // Destroy all existing enemies, coins, and power-ups
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (GameObject enemy in enemies)
         {
@@ -236,6 +291,13 @@ public class GameManager : MonoBehaviour
         {
             Destroy(coin);
         }
+        
+        // Destroy all power-up items
+        PowerUpItem[] powerUps = FindObjectsOfType<PowerUpItem>();
+        foreach (PowerUpItem powerUp in powerUps)
+        {
+            Destroy(powerUp.gameObject);
+        }
     }
     
     
@@ -243,11 +305,22 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("RestartGame called!");
         
+        // Stop any active power-up coroutines
+        if (isSpeedBoostActive)
+        {
+            StopCoroutine("SpeedBoostCoroutine");
+        }
+        
         // Reset game state
         isGameOver = false;
         lives = 3;
         coins = 0;
         nextSpawnTime = Time.time + spawnInterval;
+        
+        // Reset power-up states
+        forwardSpeed = originalForwardSpeed;
+        isSpeedBoostActive = false;
+        isInvincible = false;
         
         // Hide game over UI through UIManager
         if (uiManager != null)
@@ -310,5 +383,197 @@ public class GameManager : MonoBehaviour
         coin.transform.localScale = Vector3.one * 0.5f;
         coin.SetActive(false);
         coinPrefab = coin;
+    }
+    
+    // Power-Up Methods
+    
+    /// <summary>
+    /// Spawns a specific power-up item at the given position
+    /// </summary>
+    public void SpawnPowerUpItem(PowerUpItem.ItemType itemType, float zPos)
+    {
+        GameObject powerUpObj;
+        
+        if (powerUpPrefab != null)
+        {
+            powerUpObj = Instantiate(powerUpPrefab);
+            powerUpObj.SetActive(true);
+        }
+        else
+        {
+            // Create a sphere as power-up item
+            powerUpObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            powerUpObj.AddComponent<PowerUpItem>();
+        }
+        
+        PowerUpItem powerUp = powerUpObj.GetComponent<PowerUpItem>();
+        if (powerUp == null)
+        {
+            powerUp = powerUpObj.AddComponent<PowerUpItem>();
+        }
+        
+        powerUp.itemType = itemType;
+        
+        // Random lane
+        int lane = Random.Range(0, 3);
+        float xPos = (lane - 1) * laneWidth;
+        
+        // Random position (Up or Down only)
+        int posType = Random.Range(0, 2);
+        powerUp.position = (PowerUpItem.PowerUpPosition)posType;
+        
+        // Set initial position (will be adjusted by SetupPowerUp)
+        powerUpObj.transform.position = new Vector3(xPos, 0f, zPos);
+        
+        // Setup power-up (this will set the correct Y position based on position type)
+        powerUp.SetupPowerUp();
+        
+        // Set visual color based on type
+        Renderer renderer = powerUpObj.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            switch (itemType)
+            {
+                case PowerUpItem.ItemType.MilkCup:
+                    renderer.material.color = Color.white;
+                    break;
+                case PowerUpItem.ItemType.ChocoCup:
+                    renderer.material.color = new Color(0.4f, 0.2f, 0.1f); // Brown
+                    break;
+                case PowerUpItem.ItemType.Bandage:
+                    renderer.material.color = new Color(1f, 0.5f, 0f); // Orange
+                    break;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Spawns a power-up item with smart probability based on player's current lives
+    /// </summary>
+    public void SpawnItem(float zPos)
+    {
+        // Check if we should spawn a power-up based on spawn chance
+        if (Random.Range(0f, 1f) > powerUpSpawnChance)
+            return;
+        
+        // Smart item selection based on lives
+        PowerUpItem.ItemType selectedType;
+        
+        if (lives >= 5)
+        {
+            // At max lives, can't get bandage - choose between MilkCup and ChocoCup
+            selectedType = Random.Range(0, 2) == 0 ? PowerUpItem.ItemType.MilkCup : PowerUpItem.ItemType.ChocoCup;
+        }
+        else if (lives == 1)
+        {
+            // At 1 life, much more likely to get bandage (70% chance)
+            float rand = Random.Range(0f, 1f);
+            if (rand < 0.7f)
+            {
+                selectedType = PowerUpItem.ItemType.Bandage;
+            }
+            else if (rand < 0.85f)
+            {
+                selectedType = PowerUpItem.ItemType.MilkCup;
+            }
+            else
+            {
+                selectedType = PowerUpItem.ItemType.ChocoCup;
+            }
+        }
+        else
+        {
+            // Normal distribution: 40% MilkCup, 30% ChocoCup, 30% Bandage
+            float rand = Random.Range(0f, 1f);
+            if (rand < 0.4f)
+            {
+                selectedType = PowerUpItem.ItemType.MilkCup;
+            }
+            else if (rand < 0.7f)
+            {
+                selectedType = PowerUpItem.ItemType.ChocoCup;
+            }
+            else
+            {
+                selectedType = PowerUpItem.ItemType.Bandage;
+            }
+        }
+        
+        // Spawn the selected power-up type
+        SpawnPowerUpItem(selectedType, zPos);
+    }
+    
+    /// <summary>
+    /// Adds lives to the player
+    /// </summary>
+    public void AddLives(int amount)
+    {
+        lives += amount;
+        
+        // Cap lives at 5
+        if (lives > 5)
+            lives = 5;
+        
+        // Update UI
+        if (uiManager != null)
+        {
+            uiManager.UpdateLives(lives);
+        }
+    }
+    
+    /// <summary>
+    /// Adds coins to the player's score
+    /// </summary>
+    public void AddCoins(int amount)
+    {
+        coins += amount;
+        
+        // Update UI
+        if (uiManager != null)
+        {
+            uiManager.UpdateCoins(coins);
+        }
+    }
+    
+    /// <summary>
+    /// Activates a speed boost with multiplier and duration
+    /// </summary>
+    public void ActivateSpeedBoost(float multiplier, float duration)
+    {
+        // Stop any existing speed boost coroutine
+        if (isSpeedBoostActive)
+        {
+            StopCoroutine("SpeedBoostCoroutine");
+        }
+        
+        StartCoroutine(SpeedBoostCoroutine(multiplier, duration));
+    }
+    
+    /// <summary>
+    /// Coroutine that handles speed boost duration and invincibility
+    /// </summary>
+    private IEnumerator SpeedBoostCoroutine(float multiplier, float duration)
+    {
+        isSpeedBoostActive = true;
+        isInvincible = true;
+        
+        // Apply speed boost
+        forwardSpeed = originalForwardSpeed * multiplier;
+        
+        // Wait for duration
+        yield return new WaitForSeconds(duration);
+        
+        // Restore original speed
+        forwardSpeed = originalForwardSpeed;
+        isSpeedBoostActive = false;
+        isInvincible = false;
+    }
+    
+    /// <summary>
+    /// Check if player is currently invincible
+    /// </summary>
+    public bool IsInvincible()
+    {
+        return isInvincible;
     }
 }

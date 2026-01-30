@@ -278,12 +278,12 @@ public class Player : MonoBehaviour
                     canCollide = true;
                 }
                 
-                if (canCollide && gameManager != null)
+                if (canCollide && gameManager != null && !gameManager.IsInvincible())
                 {
                     gameManager.PlayerHit();
                 }
             }
-            else if (gameManager != null)
+            else if (gameManager != null && !gameManager.IsInvincible())
             {
                 // Fallback: if no Enemy component, just register hit
                 gameManager.PlayerHit();
