@@ -22,9 +22,21 @@ public class SwipeDetector : MonoBehaviour
     void Update()
     {
         currentSwipe = SwipeDirection.None;
-        
+
+#if UNITY_EDITOR
+        // Keyboard input for development
+        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
+            currentSwipe = SwipeDirection.Up;
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
+            currentSwipe = SwipeDirection.Down;
+        else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
+            currentSwipe = SwipeDirection.Left;
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
+            currentSwipe = SwipeDirection.Right;
+#endif
+
         // Mobile touch input
-        if (Input.touchCount > 0)
+        if (currentSwipe == SwipeDirection.None && Input.touchCount > 0)
         {
             Touch touch = Input.touches[0];
             
@@ -40,16 +52,19 @@ public class SwipeDetector : MonoBehaviour
                 isTouching = false;
             }
         }
-        // Mouse input for testing in editor
-        else if (Input.GetMouseButtonDown(0))
+        // Mouse input for testing
+        if (currentSwipe == SwipeDirection.None && Input.GetMouseButtonDown(0))
         {
             touchStartPos = Input.mousePosition;
             isTouching = true;
         }
-        else if (Input.GetMouseButtonUp(0) && isTouching)
+        if (Input.GetMouseButtonUp(0) && isTouching)
         {
-            touchEndPos = Input.mousePosition;
-            currentSwipe = DetectSwipe();
+            if (currentSwipe == SwipeDirection.None)
+            {
+                touchEndPos = Input.mousePosition;
+                currentSwipe = DetectSwipe();
+            }
             isTouching = false;
         }
     }

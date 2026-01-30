@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    [Header("References")]
+    public Animator animator;
+
     [Header("Lane Settings")]
     public float laneWidth = 2f;
     public float laneSwitchSpeed = 10f;
@@ -13,6 +16,12 @@ public class Player : MonoBehaviour
     public float jumpDuration = 0.5f;
     public float slideHeight = 0.5f;
     public float slideDuration = 0.5f;
+
+    [Header("Animator Trigger Names")]
+    public string jumpTrigger = "jump";
+    public string slideTrigger = "slide";
+    public string leftTrigger = "left";
+    public string rightTrigger = "right";
     
     private SwipeDetector swipeDetector;
     private int currentLane = 1; // 0 = left, 1 = middle, 2 = right
@@ -32,6 +41,13 @@ public class Player : MonoBehaviour
     
     void Start()
     {
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+            if (animator == null)
+                Debug.LogWarning("Player: No Animator assigned or found on this GameObject.");
+        }
+
         swipeDetector = FindObjectOfType<SwipeDetector>();
         if (swipeDetector == null)
         {
@@ -83,68 +99,33 @@ public class Player : MonoBehaviour
         {
             SwipeDetector.SwipeDirection swipe = swipeDetector.GetSwipe();
             
-            switch (swipe)
+            if (!isJumping && !isSliding)
             {
-                case SwipeDetector.SwipeDirection.Up:
-                    if (!isJumping && !isSliding)
+                switch (swipe)
+                {
+                    case SwipeDetector.SwipeDirection.Up:
+                        if (animator != null) animator.SetTrigger(jumpTrigger);
                         StartCoroutine(Jump());
-                    break;
-                    
-                case SwipeDetector.SwipeDirection.Down:
-                    if (!isJumping && !isSliding)
+                        break;
+                        
+                    case SwipeDetector.SwipeDirection.Down:
+                        if (animator != null) animator.SetTrigger(slideTrigger);
                         StartCoroutine(Slide());
-                    break;
-                    
-                case SwipeDetector.SwipeDirection.Left:
-                    if (!isJumping && !isSliding)
+                        break;
+                        
+                    case SwipeDetector.SwipeDirection.Left:
+                        if (animator != null) animator.SetTrigger(leftTrigger);
                         ChangeLane(-1);
-                    break;
-                    
-                case SwipeDetector.SwipeDirection.Right:
-                    if (!isJumping && !isSliding)
+                        break;
+                        
+                    case SwipeDetector.SwipeDirection.Right:
+                        if (animator != null) animator.SetTrigger(rightTrigger);
                         ChangeLane(1);
-                    break;
+                        break;
+                }
             }
         }
-        
-#if UNITY_EDITOR
-        // Keyboard controls for development (only in Unity Editor)
-        HandleKeyboardInput();
-#endif
     }
-    
-#if UNITY_EDITOR
-    void HandleKeyboardInput()
-    {
-        // Jump: Up Arrow, W, or Space
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.Space))
-        {
-            if (!isJumping && !isSliding)
-                StartCoroutine(Jump());
-        }
-        
-        // Slide: Down Arrow or S
-        if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S))
-        {
-            if (!isJumping && !isSliding)
-                StartCoroutine(Slide());
-        }
-        
-        // Left Lane: Left Arrow or A
-        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A))
-        {
-            if (!isJumping && !isSliding)
-                ChangeLane(-1);
-        }
-        
-        // Right Lane: Right Arrow or D
-        if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D))
-        {
-            if (!isJumping && !isSliding)
-                ChangeLane(1);
-        }
-    }
-#endif
     
     void UpdateMovement()
     {

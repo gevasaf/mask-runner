@@ -6,10 +6,6 @@ public class CharacterDebug : MonoBehaviour
     [Header("References")]
     public Animator animator;
 
-    [Header("Camera / Input")]
-    [Tooltip("Enable when camera is in front (e.g. menu). Swipe left/right will be flipped so they feel correct.")]
-    public bool flipLeftRight = false;
-
     [Header("Jump Raise")]
     public float jumpHeight = 2f;
     public float jumpDuration = 0.5f;
@@ -61,10 +57,10 @@ public class CharacterDebug : MonoBehaviour
                 animator.SetTrigger(slideTrigger);
                 break;
             case SwipeDetector.SwipeDirection.Right:
-                animator.SetTrigger(flipLeftRight ? leftTrigger : rightTrigger);
+                animator.SetTrigger(rightTrigger);
                 break;
             case SwipeDetector.SwipeDirection.Left:
-                animator.SetTrigger(flipLeftRight ? rightTrigger : leftTrigger);
+                animator.SetTrigger(leftTrigger);
                 break;
         }
     }
