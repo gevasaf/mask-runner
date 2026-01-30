@@ -44,6 +44,9 @@ public class UIManager : MonoBehaviour
     [Tooltip("Resume button in pause panel")]
     public Button resumeButton;
     
+    [Tooltip("Pause button (you can create this button in the UI)")]
+    public Button pauseButton;
+    
     // Private references to UI elements found at runtime
     private TextMeshProUGUI healthPanelText;
     private TextMeshProUGUI scorePanelText;
@@ -107,6 +110,7 @@ public class UIManager : MonoBehaviour
         // Setup buttons
         SetupButtons();
         SetupPauseButtons();
+        SetupPauseButton();
         
         // Initialize UI state
         if (gameOverPanel != null)
@@ -125,6 +129,12 @@ public class UIManager : MonoBehaviour
         // Initialize pause state
         isPaused = false;
         Time.timeScale = 1f;
+        
+        // Ensure pause button is enabled at start
+        if (pauseButton != null)
+        {
+            pauseButton.interactable = true;
+        }
     }
     
     void Update()
@@ -583,6 +593,27 @@ public class UIManager : MonoBehaviour
         }
     }
     
+    void SetupPauseButton()
+    {
+        // Setup pause button listener if it exists
+        if (pauseButton != null)
+        {
+            // Remove existing listeners to avoid duplicates
+            pauseButton.onClick.RemoveAllListeners();
+            
+            // Add listener to show pause
+            pauseButton.onClick.AddListener(() =>
+            {
+                // Don't allow pausing if game is over
+                GameManager gameManager = FindObjectOfType<GameManager>();
+                if (gameManager != null && !gameManager.IsGameOver())
+                {
+                    ShowPause();
+                }
+            });
+        }
+    }
+    
     void EnsureEventSystem()
     {
         if (FindObjectOfType<EventSystem>() == null)
@@ -755,6 +786,12 @@ public class UIManager : MonoBehaviour
             // Show the panel
             gameOverPanel.SetActive(true);
             
+            // Disable pause button when game is over
+            if (pauseButton != null)
+            {
+                pauseButton.interactable = false;
+            }
+            
             Debug.Log("UIManager: Game Over Panel shown. Text: " + (gameOverText != null) + ", Score: " + (finalScoreText != null) + ", Button: " + (restartButton != null));
         }
         else
@@ -777,6 +814,12 @@ public class UIManager : MonoBehaviour
         if (hudPanel != null)
         {
             hudPanel.SetActive(true);
+        }
+        
+        // Re-enable pause button when game restarts
+        if (pauseButton != null)
+        {
+            pauseButton.interactable = true;
         }
     }
     
@@ -861,6 +904,12 @@ public class UIManager : MonoBehaviour
         {
             Debug.LogError("UIManager: Could not find or create Pause Panel!");
         }
+        
+        // Disable pause button when game is paused
+        if (pauseButton != null)
+        {
+            pauseButton.interactable = false;
+        }
     }
     
     /// <summary>
@@ -877,6 +926,12 @@ public class UIManager : MonoBehaviour
         {
             gamePausePanel.SetActive(false);
             Debug.Log("UIManager: Game Resumed");
+        }
+        
+        // Re-enable pause button when game is resumed
+        if (pauseButton != null)
+        {
+            pauseButton.interactable = true;
         }
     }
     
@@ -901,5 +956,43 @@ public class UIManager : MonoBehaviour
     public bool IsPaused()
     {
         return isPaused;
+    }
+    
+    /// <summary>
+    /// Handle application pause (when user switches apps or OS pauses the app)
+    /// </summary>
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if (pauseStatus)
+        {
+            // App is being paused by the OS (e.g., user switched apps)
+            // Only pause if game is not already over
+            GameManager gameManager = FindObjectOfType<GameManager>();
+            if (gameManager != null && !gameManager.IsGameOver() && !isPaused)
+            {
+                ShowPause();
+            }
+        }
+        // Note: We don't auto-resume when the app comes back to focus
+        // The user can manually resume using the resume button
+    }
+    
+    /// <summary>
+    /// Handle application focus (when app loses/gains focus)
+    /// </summary>
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (!hasFocus)
+        {
+            // App lost focus (e.g., user switched apps, notification appeared)
+            // Only pause if game is not already over
+            GameManager gameManager = FindObjectOfType<GameManager>();
+            if (gameManager != null && !gameManager.IsGameOver() && !isPaused)
+            {
+                ShowPause();
+            }
+        }
+        // Note: We don't auto-resume when the app regains focus
+        // The user can manually resume using the resume button
     }
 }
