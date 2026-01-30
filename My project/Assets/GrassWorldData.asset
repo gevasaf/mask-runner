@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95018d47e0eea7b4581fcf8533fe730d, type: 3}
+  m_Name: GrassWorldData
+  m_EditorClassIdentifier: 
+  displayName: "\u05E2\u05D5\u05DC\u05DD \u05D4\u05D3\u05E9\u05D0"
+  enemyPrefabs:
+  - {fileID: 8517751404101509463, guid: 12042afddcb0d4a4296ba6d9c8d2617f, type: 3}
+  - {fileID: 467227470043590001, guid: f5f0e6cc9555d56498ba2cc7c1c2948d, type: 3}

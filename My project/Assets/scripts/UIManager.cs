@@ -51,6 +51,10 @@ public class UIManager : MonoBehaviour
     [Tooltip("TextMeshPro component for Bandage title/description")]
     public TextMeshProUGUI bandageTitleText;
     
+    [Header("World Title UI")]
+    [Tooltip("One GameObject per world, already positioned in the canvas. Shown with the same animation as power-up titles.")]
+    public GameObject[] worldTitleObjects = new GameObject[0];
+    
     [Header("UI Button References")]
     [Tooltip("Restart button in game over panel")]
     public Button restartButton;
@@ -162,6 +166,14 @@ public class UIManager : MonoBehaviour
         if (bandageTitleText != null)
         {
             bandageTitleText.gameObject.SetActive(false);
+        }
+        if (worldTitleObjects != null)
+        {
+            for (int i = 0; i < worldTitleObjects.Length; i++)
+            {
+                if (worldTitleObjects[i] != null)
+                    worldTitleObjects[i].SetActive(false);
+            }
         }
         
         // Ensure EventSystem exists
@@ -1278,6 +1290,98 @@ public class UIManager : MonoBehaviour
         {
             titleText.gameObject.SetActive(false);
             // Reset scale to original
+            rectTransform.localScale = originalScale;
+        }
+        statusTextCoroutine = null;
+    }
+    
+    /// <summary>
+    /// Show the world title GameObject at the given index (one per world), with same animation as power-up titles.
+    /// </summary>
+    public void ShowWorldTitle(int worldIndex, float duration = 2f)
+    {
+        if (worldTitleObjects == null || worldIndex < 0 || worldIndex >= worldTitleObjects.Length)
+            return;
+        GameObject titleObj = worldTitleObjects[worldIndex];
+        if (titleObj == null)
+            return;
+        // Hide all world title objects first
+        for (int i = 0; i < worldTitleObjects.Length; i++)
+        {
+            if (worldTitleObjects[i] != null)
+                worldTitleObjects[i].SetActive(false);
+        }
+        titleObj.SetActive(true);
+        if (statusTextCoroutine != null)
+            StopCoroutine(statusTextCoroutine);
+        statusTextCoroutine = StartCoroutine(AnimateTitleObjectCoroutine(titleObj, duration));
+    }
+
+    /// <summary>
+    /// Same scale-in animation as power-up titles, but for any GameObject with a RectTransform.
+    /// </summary>
+    private System.Collections.IEnumerator AnimateTitleObjectCoroutine(GameObject titleObject, float duration)
+    {
+        if (titleObject == null)
+        {
+            statusTextCoroutine = null;
+            yield break;
+        }
+        RectTransform rectTransform = titleObject.GetComponent<RectTransform>();
+        if (rectTransform == null)
+            rectTransform = titleObject.GetComponentInChildren<RectTransform>();
+        if (rectTransform == null)
+        {
+            titleObject.SetActive(false);
+            statusTextCoroutine = null;
+            yield break;
+        }
+        Vector3 originalScale = rectTransform.localScale;
+        Vector3 currentScale = originalScale;
+        currentScale.y = 0f;
+        rectTransform.localScale = currentScale;
+        // Step 1: Scale to 1.2 in Y over 0.25 seconds
+        float elapsed = 0f;
+        while (elapsed < 0.25f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.25f;
+            currentScale.y = Mathf.Lerp(0f, 1.2f, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = 1.2f;
+        rectTransform.localScale = currentScale;
+        // Step 2: Scale to 0.9 in Y over 0.1 seconds
+        elapsed = 0f;
+        while (elapsed < 0.1f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.1f;
+            currentScale.y = Mathf.Lerp(1.2f, 0.9f, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = 0.9f;
+        rectTransform.localScale = currentScale;
+        // Step 3: Scale to 1.0 in Y over 0.05 seconds
+        elapsed = 0f;
+        while (elapsed < 0.05f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.05f;
+            currentScale.y = Mathf.Lerp(0.9f, 1f, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = 1f;
+        rectTransform.localScale = currentScale;
+        float remainingTime = duration - 0.4f;
+        if (remainingTime > 0f)
+            yield return new WaitForSeconds(remainingTime);
+        if (titleObject != null)
+        {
+            titleObject.SetActive(false);
             rectTransform.localScale = originalScale;
         }
         statusTextCoroutine = null;

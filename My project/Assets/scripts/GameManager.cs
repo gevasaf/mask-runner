@@ -31,6 +31,21 @@ public class GameManager : MonoBehaviour
     [Tooltip("Enable developer shortcuts (Z=MilkCup, X=ChocoCup, C=Bandage)")]
     public bool enableDeveloperShortcuts = true;
     
+    [Header("Worlds")]
+    [Tooltip("List of worlds. First world is used at start; every 40 seconds a random world (except first) is chosen.")]
+    public WorldData[] worlds;
+    [Tooltip("Interval in seconds between world changes.")]
+    public float worldChangeInterval = 40f;
+    [Tooltip("Delay in seconds after stopping spawner before switching world (blackout).")]
+    public float worldTransitionDelay = 5f;
+    [Tooltip("Duration of floor/skybox fade to new world.")]
+    public float worldFadeDuration = 5f;
+    
+    [Header("World References")]
+    public Floor floor;
+    public SkyboxController skyboxController;
+    public EnemySpawner enemySpawner;
+    
     private int lives = 3;
     private int coins = 0;
     private float nextSpawnTime = 0f;
@@ -40,6 +55,11 @@ public class GameManager : MonoBehaviour
     private float originalForwardSpeed;
     private bool isSpeedBoostActive = false;
     private bool isInvincible = false;
+    
+    // World state
+    private int currentWorldIndex = 0;
+    private float nextWorldChangeTime = 0f;
+    private bool isWorldTransitioning = false;
     
     // UI Manager reference
     private UIManager uiManager;
@@ -77,6 +97,14 @@ public class GameManager : MonoBehaviour
         // Initialize spawn timer with initial delay (prevents coins, power-ups, and enemies from spawning)
         nextSpawnTime = Time.time + initialSpawnDelay;
         
+        // Apply first world
+        if (worlds != null && worlds.Length > 0)
+        {
+            currentWorldIndex = 0;
+            ApplyWorld(0);
+            nextWorldChangeTime = Time.time + worldChangeInterval;
+        }
+        
         // Initialize UI
         if (uiManager != null)
         {
@@ -101,6 +129,133 @@ public class GameManager : MonoBehaviour
             SpawnObstacles();
             nextSpawnTime = Time.time + spawnInterval;
         }
+        
+        // World change timer (every 40 seconds, pick random world except first)
+        if (!isWorldTransitioning && worlds != null && worlds.Length > 1 && Time.time >= nextWorldChangeTime)
+        {
+            StartCoroutine(WorldTransitionCoroutine());
+        }
+    }
+    
+    /// <summary>
+    /// Build opacities for a world by index: 1 at that index, 0 for the rest (max 5 layers).
+    /// </summary>
+    static float[] OpacitiesFromWorldIndex(int worldIndex)
+    {
+        float[] o = new float[5];
+        if (worldIndex >= 0 && worldIndex < 5)
+            o[worldIndex] = 1f;
+        return o;
+    }
+
+    /// <summary>
+    /// Apply a world immediately (floor/skybox opacities from world index, spawner prefabs).
+    /// </summary>
+    void ApplyWorld(int worldIndex)
+    {
+        if (worlds == null || worldIndex < 0 || worldIndex >= worlds.Length)
+            return;
+        WorldData w = worlds[worldIndex];
+        if (w == null)
+            return;
+        float[] opacities = OpacitiesFromWorldIndex(worldIndex);
+        if (floor != null)
+            floor.SetOpacities(opacities);
+        if (skyboxController != null)
+            skyboxController.SetOpacities(opacities);
+        if (enemySpawner != null)
+            enemySpawner.SetEnemyPrefabs(w.enemyPrefabs);
+    }
+    
+    IEnumerator WorldTransitionCoroutine()
+    {
+        isWorldTransitioning = true;
+        
+        if (enemySpawner != null)
+            enemySpawner.SetSpawningEnabled(false);
+        
+        yield return new WaitForSeconds(worldTransitionDelay);
+        
+        // Pick random world (excluding first and current)
+        int[] valid = new int[worlds.Length];
+        int validCount = 0;
+        for (int i = 1; i < worlds.Length; i++)
+        {
+            if (i != currentWorldIndex && worlds[i] != null)
+                valid[validCount++] = i;
+        }
+        if (validCount == 0)
+        {
+            isWorldTransitioning = false;
+            if (enemySpawner != null)
+                enemySpawner.SetSpawningEnabled(true);
+            nextWorldChangeTime = Time.time + worldChangeInterval;
+            yield break;
+        }
+        int nextIndex = valid[Random.Range(0, validCount)];
+        WorldData nextWorld = worlds[nextIndex];
+        if (nextWorld == null)
+        {
+            isWorldTransitioning = false;
+            if (enemySpawner != null)
+                enemySpawner.SetSpawningEnabled(true);
+            nextWorldChangeTime = Time.time + worldChangeInterval;
+            yield break;
+        }
+        
+        // 1. Start fade over 5 seconds (non-blocking)
+        StartCoroutine(FadeToWorldCoroutine(nextIndex));
+        
+        // 2. Show world title (like power-up)
+        if (uiManager != null)
+            uiManager.ShowWorldTitle(nextIndex, 2f);
+        
+        // 3. Set spawner to new world and turn back on
+        if (enemySpawner != null)
+        {
+            enemySpawner.SetEnemyPrefabs(nextWorld.enemyPrefabs);
+            enemySpawner.SetSpawningEnabled(true);
+        }
+        
+        currentWorldIndex = nextIndex;
+        nextWorldChangeTime = Time.time + worldChangeInterval;
+        isWorldTransitioning = false;
+    }
+    
+    IEnumerator FadeToWorldCoroutine(int targetWorldIndex)
+    {
+        if (worlds == null || targetWorldIndex < 0 || targetWorldIndex >= worlds.Length)
+            yield break;
+        if (worlds[targetWorldIndex] == null)
+            yield break;
+        
+        float[] floorStart = floor != null ? floor.GetOpacities() : new float[5];
+        float[] floorEnd = OpacitiesFromWorldIndex(targetWorldIndex);
+        float[] skyboxStart = skyboxController != null ? skyboxController.GetOpacities() : new float[5];
+        float[] skyboxEnd = OpacitiesFromWorldIndex(targetWorldIndex);
+        
+        float elapsed = 0f;
+        while (elapsed < worldFadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / worldFadeDuration);
+            float[] floorCur = new float[5];
+            float[] skyboxCur = new float[5];
+            for (int i = 0; i < 5; i++)
+            {
+                floorCur[i] = Mathf.Lerp(floorStart[i], floorEnd[i], t);
+                skyboxCur[i] = Mathf.Lerp(skyboxStart[i], skyboxEnd[i], t);
+            }
+            if (floor != null)
+                floor.SetOpacities(floorCur);
+            if (skyboxController != null)
+                skyboxController.SetOpacities(skyboxCur);
+            yield return null;
+        }
+        if (floor != null)
+            floor.SetOpacities(floorEnd);
+        if (skyboxController != null)
+            skyboxController.SetOpacities(skyboxEnd);
     }
     
     /// <summary>
@@ -346,6 +501,17 @@ public class GameManager : MonoBehaviour
         forwardSpeed = originalForwardSpeed;
         isSpeedBoostActive = false;
         isInvincible = false;
+        
+        // Reset to first world
+        if (worlds != null && worlds.Length > 0)
+        {
+            currentWorldIndex = 0;
+            ApplyWorld(0);
+            nextWorldChangeTime = Time.time + worldChangeInterval;
+            isWorldTransitioning = false;
+            if (enemySpawner != null)
+                enemySpawner.SetSpawningEnabled(true);
+        }
         
         // Hide game over UI through UIManager
         if (uiManager != null)

@@ -2,12 +2,8 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [Header("Enemy Prefabs")]
-    [Tooltip("Array of enemy prefabs to spawn. Drag your enemy prefabs here (e.g., Mask Villain, Cactus).\n" +
-             "Each prefab must have an Enemy component with:\n" +
-             "- laneWidth: 1 (single lane) or 2 (blocks two lanes)\n" +
-             "- isJumpable: true if player can jump over it, false if it blocks jumping\n" +
-             "- isDuckable: true if player can slide under it, false if it blocks sliding")]
+    [Header("Enemy Prefabs (fallback / first world)")]
+    [Tooltip("Default enemy prefabs if not set per-world. Each world can override via SetEnemyPrefabs.")]
     public GameObject[] enemyPrefabs;
     
     [Header("Lane Configuration")]
@@ -19,6 +15,8 @@ public class EnemySpawner : MonoBehaviour
     private float nextSpawnTime = 0f;
     private float spawnDistance;
     private float spawnInterval;
+    private GameObject[] _activePrefabs;
+    private bool _spawningEnabled = true;
     
     void Start()
     {
@@ -42,7 +40,7 @@ public class EnemySpawner : MonoBehaviour
         spawnInterval = gameManager.GetSpawnInterval();
         float initialDelay = gameManager.GetInitialSpawnDelay();
         
-        // Validate enemy prefabs
+        _activePrefabs = enemyPrefabs != null && enemyPrefabs.Length > 0 ? enemyPrefabs : null;
         ValidateEnemyPrefabs();
         
         // Initialize spawn timer with initial delay
@@ -50,35 +48,51 @@ public class EnemySpawner : MonoBehaviour
     }
     
     /// <summary>
+    /// Set the list of enemy prefabs for the current world (called by GameManager on world change).
+    /// </summary>
+    public void SetEnemyPrefabs(GameObject[] prefabs)
+    {
+        _activePrefabs = prefabs != null && prefabs.Length > 0 ? prefabs : enemyPrefabs;
+    }
+    
+    /// <summary>
+    /// Enable or disable spawning (e.g. during world transition).
+    /// </summary>
+    public void SetSpawningEnabled(bool enabled)
+    {
+        _spawningEnabled = enabled;
+    }
+    
+    /// <summary>
     /// Validates that all enemy prefabs have the Enemy component configured
     /// </summary>
     void ValidateEnemyPrefabs()
     {
-        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        GameObject[] toValidate = _activePrefabs != null ? _activePrefabs : enemyPrefabs;
+        if (toValidate == null || toValidate.Length == 0)
         {
             Debug.LogWarning("EnemySpawner: No enemy prefabs assigned! Enemies will not spawn.");
             return;
         }
         
-        for (int i = 0; i < enemyPrefabs.Length; i++)
+        for (int i = 0; i < toValidate.Length; i++)
         {
-            if (enemyPrefabs[i] == null)
+            if (toValidate[i] == null)
             {
                 Debug.LogWarning($"EnemySpawner: Enemy prefab at index {i} is null!");
                 continue;
             }
             
-            Enemy enemy = enemyPrefabs[i].GetComponent<Enemy>();
+            Enemy enemy = toValidate[i].GetComponent<Enemy>();
             if (enemy == null)
             {
-                Debug.LogWarning($"EnemySpawner: Prefab '{enemyPrefabs[i].name}' at index {i} does not have an Enemy component!");
+                Debug.LogWarning($"EnemySpawner: Prefab '{toValidate[i].name}' at index {i} does not have an Enemy component!");
             }
             else
             {
-                // Validate laneWidth
                 if (enemy.laneWidth < 1 || enemy.laneWidth > 2)
                 {
-                    Debug.LogWarning($"EnemySpawner: Prefab '{enemyPrefabs[i].name}' has invalid laneWidth ({enemy.laneWidth}). Should be 1 or 2.");
+                    Debug.LogWarning($"EnemySpawner: Prefab '{toValidate[i].name}' has invalid laneWidth ({enemy.laneWidth}). Should be 1 or 2.");
                 }
             }
         }
@@ -86,16 +100,15 @@ public class EnemySpawner : MonoBehaviour
     
     void Update()
     {
+        if (!_spawningEnabled)
+            return;
         // Don't spawn if game is over or no prefabs available
         if (gameManager != null && gameManager.IsGameOver())
-        {
             return;
-        }
         
-        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
-        {
+        GameObject[] prefabs = _activePrefabs != null ? _activePrefabs : enemyPrefabs;
+        if (prefabs == null || prefabs.Length == 0)
             return;
-        }
         
         // Spawn enemy at interval
         if (Time.time >= nextSpawnTime)
@@ -110,9 +123,11 @@ public class EnemySpawner : MonoBehaviour
     /// </summary>
     void SpawnEnemy()
     {
-        // Select random enemy prefab
-        int prefabIndex = Random.Range(0, enemyPrefabs.Length);
-        GameObject selectedPrefab = enemyPrefabs[prefabIndex];
+        GameObject[] prefabs = _activePrefabs != null ? _activePrefabs : enemyPrefabs;
+        if (prefabs == null || prefabs.Length == 0)
+            return;
+        int prefabIndex = Random.Range(0, prefabs.Length);
+        GameObject selectedPrefab = prefabs[prefabIndex];
         
         if (selectedPrefab == null)
         {
