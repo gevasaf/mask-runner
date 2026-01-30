@@ -37,6 +37,19 @@ public class UIManager : MonoBehaviour
     [Tooltip("TextMeshPro component for final score display")]
     public TextMeshProUGUI finalScoreText;
     
+    [Tooltip("TextMeshPro component for status notifications (power-ups, etc.)")]
+    public TextMeshProUGUI statusText;
+    
+    [Header("Power-Up UI References")]
+    [Tooltip("TextMeshPro component for MilkCup title/description")]
+    public TextMeshProUGUI milkCupTitleText;
+    
+    [Tooltip("TextMeshPro component for ChocoCup title/description")]
+    public TextMeshProUGUI chocoCupTitleText;
+    
+    [Tooltip("TextMeshPro component for Bandage title/description")]
+    public TextMeshProUGUI bandageTitleText;
+    
     [Header("UI Button References")]
     [Tooltip("Restart button in game over panel")]
     public Button restartButton;
@@ -53,6 +66,9 @@ public class UIManager : MonoBehaviour
     
     // Pause state
     private bool isPaused = false;
+    
+    // Status text coroutine reference
+    private Coroutine statusTextCoroutine;
     
     [Header("Developer Settings")]
     [Tooltip("Key to press to toggle pause menu (default: P)")]
@@ -107,6 +123,9 @@ public class UIManager : MonoBehaviour
         // Find or create TextMeshPro components
         FindOrCreateTextComponents();
         
+        // Find or create status text
+        FindOrCreateStatusText();
+        
         // Setup buttons
         SetupButtons();
         SetupPauseButtons();
@@ -121,6 +140,20 @@ public class UIManager : MonoBehaviour
         if (gamePausePanel != null)
         {
             gamePausePanel.SetActive(false);
+        }
+        
+        // Initially hide power-up title texts
+        if (milkCupTitleText != null)
+        {
+            milkCupTitleText.gameObject.SetActive(false);
+        }
+        if (chocoCupTitleText != null)
+        {
+            chocoCupTitleText.gameObject.SetActive(false);
+        }
+        if (bandageTitleText != null)
+        {
+            bandageTitleText.gameObject.SetActive(false);
         }
         
         // Ensure EventSystem exists
@@ -994,5 +1027,226 @@ public class UIManager : MonoBehaviour
         }
         // Note: We don't auto-resume when the app regains focus
         // The user can manually resume using the resume button
+    }
+    
+    /// <summary>
+    /// Find or create the status text component for power-up notifications
+    /// </summary>
+    void FindOrCreateStatusText()
+    {
+        if (statusText == null)
+        {
+            // Try to find by name
+            GameObject statusObj = GameObject.Find("StatusText");
+            if (statusObj != null)
+            {
+                statusText = statusObj.GetComponent<TextMeshProUGUI>();
+            }
+            
+            // Create if still not found
+            if (statusText == null)
+            {
+                GameObject statusObjNew = new GameObject("StatusText");
+                if (canvas != null)
+                {
+                    statusObjNew.transform.SetParent(canvas.transform);
+                }
+                else if (hudPanel != null)
+                {
+                    statusObjNew.transform.SetParent(hudPanel.transform);
+                }
+                
+                statusText = statusObjNew.AddComponent<TextMeshProUGUI>();
+                statusText.fontSize = 36;
+                statusText.color = Color.yellow;
+                statusText.text = "";
+                statusText.alignment = TextAlignmentOptions.Center;
+                statusText.fontStyle = FontStyles.Bold;
+                
+                RectTransform rectTransform = statusObjNew.GetComponent<RectTransform>();
+                rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+                rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+                rectTransform.pivot = new Vector2(0.5f, 0.5f);
+                rectTransform.anchoredPosition = new Vector2(0, 100);
+                rectTransform.sizeDelta = new Vector2(400, 50);
+            }
+        }
+        
+        // Initially hide the status text
+        if (statusText != null)
+        {
+            statusText.gameObject.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Show a status message (e.g., power-up notifications) for 1 second
+    /// </summary>
+    public void ShowStatusText(string message)
+    {
+        if (statusText == null)
+        {
+            FindOrCreateStatusText();
+        }
+        
+        if (statusText != null)
+        {
+            // Stop any existing coroutine
+            if (statusTextCoroutine != null)
+            {
+                StopCoroutine(statusTextCoroutine);
+            }
+            
+            // Start new coroutine to show and hide the text
+            statusTextCoroutine = StartCoroutine(ShowStatusTextCoroutine(message));
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to show status text for 1 second
+    /// </summary>
+    private System.Collections.IEnumerator ShowStatusTextCoroutine(string message)
+    {
+        if (statusText != null)
+        {
+            statusText.text = message;
+            statusText.gameObject.SetActive(true);
+            
+            yield return new WaitForSeconds(1f);
+            
+            statusText.gameObject.SetActive(false);
+            statusTextCoroutine = null;
+        }
+    }
+    
+    /// <summary>
+    /// Show the appropriate power-up title text when collected
+    /// </summary>
+    public void ShowPowerUpTitle(PowerUpItem.ItemType itemType, float duration = 2f)
+    {
+        TextMeshProUGUI titleText = null;
+        
+        switch (itemType)
+        {
+            case PowerUpItem.ItemType.MilkCup:
+                titleText = milkCupTitleText;
+                break;
+            case PowerUpItem.ItemType.ChocoCup:
+                titleText = chocoCupTitleText;
+                break;
+            case PowerUpItem.ItemType.Bandage:
+                titleText = bandageTitleText;
+                break;
+        }
+        
+        if (titleText != null)
+        {
+            // Hide all other title texts first
+            if (milkCupTitleText != null && milkCupTitleText != titleText)
+            {
+                milkCupTitleText.gameObject.SetActive(false);
+            }
+            if (chocoCupTitleText != null && chocoCupTitleText != titleText)
+            {
+                chocoCupTitleText.gameObject.SetActive(false);
+            }
+            if (bandageTitleText != null && bandageTitleText != titleText)
+            {
+                bandageTitleText.gameObject.SetActive(false);
+            }
+            
+            // Show the selected title text
+            titleText.gameObject.SetActive(true);
+            
+            // Start animation coroutine
+            if (statusTextCoroutine != null)
+            {
+                StopCoroutine(statusTextCoroutine);
+            }
+            statusTextCoroutine = StartCoroutine(AnimatePowerUpTitleCoroutine(titleText, duration));
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to animate and hide power-up title
+    /// </summary>
+    private System.Collections.IEnumerator AnimatePowerUpTitleCoroutine(TextMeshProUGUI titleText, float duration)
+    {
+        if (titleText == null)
+        {
+            yield break;
+        }
+        
+        RectTransform rectTransform = titleText.GetComponent<RectTransform>();
+        if (rectTransform == null)
+        {
+            yield break;
+        }
+        
+        // Store original scale
+        Vector3 originalScale = rectTransform.localScale;
+        Vector3 currentScale = originalScale;
+        
+        // Start at scale 0 in Y
+        currentScale.y = 0f;
+        rectTransform.localScale = currentScale;
+        
+        // Step 1: Scale to 1.2 in Y over 0.25 seconds
+        float elapsed = 0f;
+        float targetY = 1.2f;
+        while (elapsed < 0.25f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.25f;
+            currentScale.y = Mathf.Lerp(0f, targetY, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = targetY;
+        rectTransform.localScale = currentScale;
+        
+        // Step 2: Scale to 0.9 in Y over 0.1 seconds
+        elapsed = 0f;
+        targetY = 0.9f;
+        while (elapsed < 0.1f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.1f;
+            currentScale.y = Mathf.Lerp(1.2f, targetY, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = targetY;
+        rectTransform.localScale = currentScale;
+        
+        // Step 3: Scale to 1.0 in Y over 0.05 seconds
+        elapsed = 0f;
+        targetY = 1.0f;
+        while (elapsed < 0.05f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / 0.05f;
+            currentScale.y = Mathf.Lerp(0.9f, targetY, progress);
+            rectTransform.localScale = currentScale;
+            yield return null;
+        }
+        currentScale.y = targetY;
+        rectTransform.localScale = currentScale;
+        
+        // Wait for the remaining duration (total duration minus animation time which is 0.4 seconds)
+        float remainingTime = duration - 0.4f;
+        if (remainingTime > 0f)
+        {
+            yield return new WaitForSeconds(remainingTime);
+        }
+        
+        // Hide the title text
+        if (titleText != null)
+        {
+            titleText.gameObject.SetActive(false);
+            // Reset scale to original
+            rectTransform.localScale = originalScale;
+        }
+        statusTextCoroutine = null;
     }
 }
