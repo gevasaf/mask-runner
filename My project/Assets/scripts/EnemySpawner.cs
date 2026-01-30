@@ -40,12 +40,13 @@ public class EnemySpawner : MonoBehaviour
         // Get spawn settings from GameManager
         spawnDistance = gameManager.GetSpawnDistance();
         spawnInterval = gameManager.GetSpawnInterval();
+        float initialDelay = gameManager.GetInitialSpawnDelay();
         
         // Validate enemy prefabs
         ValidateEnemyPrefabs();
         
-        // Initialize spawn timer
-        nextSpawnTime = Time.time + spawnInterval;
+        // Initialize spawn timer with initial delay
+        nextSpawnTime = Time.time + initialDelay + spawnInterval;
     }
     
     /// <summary>

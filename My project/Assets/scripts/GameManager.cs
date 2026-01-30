@@ -10,6 +10,10 @@ public class GameManager : MonoBehaviour
     public float spawnInterval = 2f;
     public float laneWidth = 2f;
     
+    [Header("Spawn Timing")]
+    [Tooltip("Initial delay before spawning starts (in seconds). Default: 2 seconds")]
+    public float initialSpawnDelay = 2f;
+    
     [Header("Prefabs")]
     public GameObject enemyPrefab;
     public GameObject coinPrefab;
@@ -69,6 +73,9 @@ public class GameManager : MonoBehaviour
         {
             CreateCoinPrefab();
         }
+        
+        // Initialize spawn timer with initial delay (prevents coins, power-ups, and enemies from spawning)
+        nextSpawnTime = Time.time + initialSpawnDelay;
         
         // Initialize UI
         if (uiManager != null)
@@ -284,11 +291,17 @@ public class GameManager : MonoBehaviour
             uiManager.ShowGameOver(coins);
         }
         
-        // Stop player input
+        // Stop player input and disable player GameObject
         Player playerScript = FindObjectOfType<Player>();
         if (playerScript != null)
         {
             playerScript.SetGameOver(true);
+        }
+        
+        // Disable player GameObject so it's not visible
+        if (player != null)
+        {
+            player.gameObject.SetActive(false);
         }
         
         // Destroy all existing enemies, coins, and power-ups
@@ -327,7 +340,7 @@ public class GameManager : MonoBehaviour
         isGameOver = false;
         lives = 3;
         coins = 0;
-        nextSpawnTime = Time.time + spawnInterval;
+        nextSpawnTime = Time.time + initialSpawnDelay + spawnInterval;
         
         // Reset power-up states
         forwardSpeed = originalForwardSpeed;
@@ -342,14 +355,28 @@ public class GameManager : MonoBehaviour
             uiManager.UpdateUI(lives, coins);
         }
         
-        // Reset player
+        // Reset player and re-enable player GameObject
         Player playerScript = FindObjectOfType<Player>();
         if (playerScript != null)
         {
             playerScript.SetGameOver(false);
+        }
+        
+        // Re-enable player GameObject so it's visible again
+        if (player != null)
+        {
+            player.gameObject.SetActive(true);
             // Reset player position
-            if (player != null)
+            player.position = new Vector3(0, player.position.y, player.position.z);
+        }
+        else
+        {
+            // If player reference is lost, try to find it again
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
             {
+                player = playerObj.transform;
+                player.gameObject.SetActive(true);
                 player.position = new Vector3(0, player.position.y, player.position.z);
             }
         }
@@ -369,6 +396,11 @@ public class GameManager : MonoBehaviour
     public float GetSpawnInterval()
     {
         return spawnInterval;
+    }
+    
+    public float GetInitialSpawnDelay()
+    {
+        return initialSpawnDelay;
     }
     
     public bool IsGameOver()
