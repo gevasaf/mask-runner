@@ -26,6 +26,10 @@ public class Player : MonoBehaviour
     private GameManager gameManager;
     private bool gameOver = false;
     
+    // Track recently hit enemies to prevent multiple hits from the same enemy
+    private HashSet<GameObject> recentlyHitEnemies = new HashSet<GameObject>();
+    private float hitCooldown = 0.5f; // Cooldown time in seconds
+    
     void Start()
     {
         swipeDetector = FindObjectOfType<SwipeDetector>();
@@ -258,34 +262,68 @@ public class Player : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
-            // Check if enemy is at a height the player can collide with
+            // Find the root enemy GameObject (the one with the Enemy component)
+            // This handles cases where colliders are on child objects
             Enemy enemy = other.GetComponent<Enemy>();
-            if (enemy != null)
+            if (enemy == null)
             {
-                bool canCollide = false;
-                
-                // Player is on ground (y = originalY), can collide with Down or Both enemies
-                if (enemy.position == Enemy.EnemyPosition.Down || 
-                    enemy.position == Enemy.EnemyPosition.Both)
+                // If Enemy component not on this object, search in parent
+                enemy = other.GetComponentInParent<Enemy>();
+            }
+            
+            if (enemy == null)
+            {
+                return; // No enemy component found
+            }
+            
+            // Use the root enemy GameObject for tracking, not the collider's GameObject
+            GameObject rootEnemyObject = enemy.gameObject;
+            
+            // Prevent multiple hits from the same enemy
+            if (recentlyHitEnemies.Contains(rootEnemyObject))
+            {
+                return; // Already hit this enemy recently, ignore
+            }
+            
+            // Check if enemy can be avoided based on player's current state
+            bool canCollide = true; // Default to collision unless player can avoid it
+            
+            // Player is on ground (not jumping, not sliding)
+            if (!isJumping && !isSliding)
+            {
+                // Can avoid collision if enemy is duckable (can slide under it)
+                if (enemy.isDuckable)
                 {
-                    canCollide = !isJumping; // Only if not jumping
-                }
-                
-                // Player is jumping, can collide with Up or Both enemies
-                if (isJumping && (enemy.position == Enemy.EnemyPosition.Up || 
-                                  enemy.position == Enemy.EnemyPosition.Both))
-                {
-                    canCollide = true;
-                }
-                
-                if (canCollide && gameManager != null && !gameManager.IsInvincible())
-                {
-                    gameManager.PlayerHit();
+                    canCollide = false;
                 }
             }
-            else if (gameManager != null && !gameManager.IsInvincible())
+            // Player is jumping
+            else if (isJumping)
             {
-                // Fallback: if no Enemy component, just register hit
+                // Can avoid collision if enemy is jumpable (can jump over it)
+                if (enemy.isJumpable)
+                {
+                    canCollide = false;
+                }
+            }
+            // Player is sliding
+            else if (isSliding)
+            {
+                // Can avoid collision if enemy is duckable (can slide under it)
+                if (enemy.isDuckable)
+                {
+                    canCollide = false;
+                }
+            }
+            
+            if (canCollide && gameManager != null && !gameManager.IsInvincible())
+            {
+                // Mark this enemy as recently hit (using root object)
+                recentlyHitEnemies.Add(rootEnemyObject);
+                
+                // Remove from set after cooldown period
+                StartCoroutine(RemoveFromRecentlyHit(rootEnemyObject));
+                
                 gameManager.PlayerHit();
             }
         }
@@ -297,5 +335,14 @@ public class Player : MonoBehaviour
             }
             Destroy(other.gameObject);
         }
+    }
+    
+    /// <summary>
+    /// Removes an enemy from the recently hit set after the cooldown period
+    /// </summary>
+    IEnumerator RemoveFromRecentlyHit(GameObject enemyObject)
+    {
+        yield return new WaitForSeconds(hitCooldown);
+        recentlyHitEnemies.Remove(enemyObject);
     }
 }

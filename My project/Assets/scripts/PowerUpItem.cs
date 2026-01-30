@@ -19,25 +19,47 @@ public class PowerUpItem : MonoBehaviour
     public ItemType itemType = ItemType.MilkCup;
     public PowerUpPosition position = PowerUpPosition.Down;
     
-    [Header("ChocoCup Settings")]
-    [Tooltip("Speed multiplier for ChocoCup (default: 2.0)")]
-    public float speedMultiplier = 2f;
+    [Header("Power-Up Settings References")]
+    [Tooltip("Settings for MilkCup power-up. Leave null to use PowerUpSettingsManager or default values.")]
+    public MilkCupSettings milkCupSettings;
     
-    [Tooltip("Duration of speed boost in seconds (default: 5.0)")]
-    public float speedBoostDuration = 5f;
+    [Tooltip("Settings for ChocoCup power-up. Leave null to use PowerUpSettingsManager or default values.")]
+    public ChocoCupSettings chocoCupSettings;
+    
+    [Tooltip("Settings for Bandage power-up. Leave null to use PowerUpSettingsManager or default values.")]
+    public BandageSettings bandageSettings;
     
     private GameManager gameManager;
     private UIManager uiManager;
+    private PowerUpSettingsManager settingsManager;
     private float forwardSpeed = 10f;
     
     void Start()
     {
         gameManager = FindObjectOfType<GameManager>();
         uiManager = UIManager.Instance;
+        settingsManager = PowerUpSettingsManager.Instance;
         
         if (gameManager != null)
         {
             forwardSpeed = gameManager.GetForwardSpeed();
+        }
+        
+        // If settings are not assigned, try to get them from the settings manager
+        if (settingsManager != null)
+        {
+            if (milkCupSettings == null)
+            {
+                milkCupSettings = settingsManager.GetMilkCupSettings();
+            }
+            if (chocoCupSettings == null)
+            {
+                chocoCupSettings = settingsManager.GetChocoCupSettings();
+            }
+            if (bandageSettings == null)
+            {
+                bandageSettings = settingsManager.GetBandageSettings();
+            }
         }
         
         SetupPowerUp();
@@ -140,7 +162,8 @@ public class PowerUpItem : MonoBehaviour
                 case ItemType.MilkCup:
                     if (gameManager != null)
                     {
-                        gameManager.AddCoins(10);
+                        int coinsToAdd = milkCupSettings != null ? milkCupSettings.coinsToAdd : 10;
+                        gameManager.AddCoins(coinsToAdd);
                     }
                     if (uiManager != null)
                     {
@@ -151,7 +174,9 @@ public class PowerUpItem : MonoBehaviour
                 case ItemType.ChocoCup:
                     if (gameManager != null)
                     {
-                        gameManager.ActivateSpeedBoost(speedMultiplier, speedBoostDuration);
+                        float multiplier = chocoCupSettings != null ? chocoCupSettings.speedMultiplier : 2f;
+                        float duration = chocoCupSettings != null ? chocoCupSettings.speedBoostDuration : 5f;
+                        gameManager.ActivateSpeedBoost(multiplier, duration);
                     }
                     if (uiManager != null)
                     {
@@ -162,7 +187,8 @@ public class PowerUpItem : MonoBehaviour
                 case ItemType.Bandage:
                     if (gameManager != null)
                     {
-                        gameManager.AddLives(1);
+                        int livesToAdd = bandageSettings != null ? bandageSettings.livesToAdd : 1;
+                        gameManager.AddLives(livesToAdd);
                     }
                     if (uiManager != null)
                     {

@@ -64,10 +64,7 @@ public class GameManager : MonoBehaviour
         }
         
         // Create prefabs if they don't exist
-        if (enemyPrefab == null)
-        {
-            CreateEnemyPrefab();
-        }
+        // Note: enemyPrefab is deprecated - enemies are now spawned by EnemySpawner
         if (coinPrefab == null)
         {
             CreateCoinPrefab();
@@ -131,68 +128,83 @@ public class GameManager : MonoBehaviour
         SpawnItem(spawnZ);
         
         // Randomly decide what to spawn
-        int spawnType = Random.Range(0, 4);
+        // Note: Enemy spawning is now handled by EnemySpawner, so we only spawn coins here
+        int spawnType = Random.Range(0, 3);
         
         switch (spawnType)
         {
-            case 0: // Spawn enemy
-                SpawnEnemy(spawnZ);
-                break;
-            case 1: // Spawn coin
+            case 0: // Spawn coin
                 SpawnCoin(spawnZ);
                 break;
-            case 2: // Spawn enemy and coin
-                SpawnEnemy(spawnZ);
-                SpawnCoin(spawnZ);
-                break;
-            case 3: // Spawn multiple coins
+            case 1: // Spawn multiple coins
                 for (int i = 0; i < 3; i++)
                 {
                     SpawnCoin(spawnZ + i * 5f);
                 }
+                break;
+            case 2: // Spawn coin at different positions
+                SpawnCoin(spawnZ);
+                SpawnCoin(spawnZ + 5f);
                 break;
         }
     }
     
     void SpawnEnemy(float zPos)
     {
-        GameObject enemyObj;
-        
-        if (enemyPrefab != null)
+        if (enemyPrefab == null)
         {
-            enemyObj = Instantiate(enemyPrefab);
-        }
-        else
-        {
-            // Create a cube as enemy
-            enemyObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            enemyObj.AddComponent<Enemy>();
+            Debug.LogWarning("GameManager: enemyPrefab is null. Cannot spawn enemy.");
+            return;
         }
         
+        // Instantiate enemy from prefab
+        GameObject enemyObj = Instantiate(enemyPrefab);
+        
+        // Get enemy component to check laneWidth
         Enemy enemy = enemyObj.GetComponent<Enemy>();
         if (enemy == null)
         {
-            enemy = enemyObj.AddComponent<Enemy>();
+            Debug.LogWarning("GameManager: enemyPrefab does not have an Enemy component.");
+            Destroy(enemyObj);
+            return;
         }
         
-        // Random lane (0, 1, or 2)
-        int lane = Random.Range(0, 3);
-        enemy.SetLane(lane);
-        
-        // Random position (Up, Down, or Both)
-        int posType = Random.Range(0, 3);
-        enemy.position = (Enemy.EnemyPosition)posType;
-        
-        // Random lane width (1 or 2)
-        int width = Random.Range(1, 3);
-        enemy.SetLaneWidth(width);
+        // Calculate spawn X position based on laneWidth using smart lane alignment
+        float spawnX = CalculateEnemySpawnX(enemy.laneWidth);
         
         // Set position and activate
-        enemyObj.transform.position = new Vector3(enemyObj.transform.position.x, enemyObj.transform.position.y, zPos);
+        enemyObj.transform.position = new Vector3(spawnX, enemyObj.transform.position.y, zPos);
         enemyObj.SetActive(true);
+    }
+    
+    /// <summary>
+    /// Calculates the X position for spawning an enemy based on laneWidth
+    /// laneWidth 1: spawns on one of the three lanes (-2, 0, 2)
+    /// laneWidth 2: spawns between two lanes (-1 or 1) to block both paths
+    /// </summary>
+    float CalculateEnemySpawnX(int laneWidth)
+    {
+        float[] lanes = { -2f, 0f, 2f };
         
-        // Force setup after all properties are set
-        enemy.SetupEnemy();
+        if (laneWidth == 1)
+        {
+            // Spawn on one of the three fixed lanes
+            int laneIndex = Random.Range(0, lanes.Length);
+            return lanes[laneIndex];
+        }
+        else if (laneWidth == 2)
+        {
+            // Spawn between two lanes
+            // Options: between lane 0 and 1 (x = -1), or between lane 1 and 2 (x = 1)
+            int choice = Random.Range(0, 2);
+            return choice == 0 ? -1f : 1f;
+        }
+        else
+        {
+            // Fallback: default to center lane
+            Debug.LogWarning("GameManager: Invalid laneWidth " + laneWidth + ", defaulting to center lane");
+            return lanes[1]; // Center lane
+        }
     }
     
     void SpawnCoin(float zPos)
@@ -347,6 +359,16 @@ public class GameManager : MonoBehaviour
     {
         // Return 0 if game is over to stop all movement
         return isGameOver ? 0f : forwardSpeed;
+    }
+    
+    public float GetSpawnDistance()
+    {
+        return spawnDistance;
+    }
+    
+    public float GetSpawnInterval()
+    {
+        return spawnInterval;
     }
     
     public bool IsGameOver()
