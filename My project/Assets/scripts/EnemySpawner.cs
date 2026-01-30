@@ -1,0 +1,191 @@
+using UnityEngine;
+
+public class EnemySpawner : MonoBehaviour
+{
+    [Header("Enemy Prefabs")]
+    [Tooltip("Array of enemy prefabs to spawn. Drag your enemy prefabs here (e.g., Mask Villain, Cactus).\n" +
+             "Each prefab must have an Enemy component with:\n" +
+             "- laneWidth: 1 (single lane) or 2 (blocks two lanes)\n" +
+             "- isJumpable: true if player can jump over it, false if it blocks jumping\n" +
+             "- isDuckable: true if player can slide under it, false if it blocks sliding")]
+    public GameObject[] enemyPrefabs;
+    
+    [Header("Lane Configuration")]
+    [Tooltip("Fixed lane X positions (left, center, right)")]
+    private readonly float[] lanes = { -2f, 0f, 2f };
+    
+    private Transform player;
+    private GameManager gameManager;
+    private float nextSpawnTime = 0f;
+    private float spawnDistance;
+    private float spawnInterval;
+    
+    void Start()
+    {
+        // Find player reference
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            player = playerObj.transform;
+        }
+        
+        // Find GameManager reference
+        gameManager = FindObjectOfType<GameManager>();
+        if (gameManager == null)
+        {
+            Debug.LogError("EnemySpawner: GameManager not found! Cannot get spawn settings.");
+            return;
+        }
+        
+        // Get spawn settings from GameManager
+        spawnDistance = gameManager.GetSpawnDistance();
+        spawnInterval = gameManager.GetSpawnInterval();
+        
+        // Validate enemy prefabs
+        ValidateEnemyPrefabs();
+        
+        // Initialize spawn timer
+        nextSpawnTime = Time.time + spawnInterval;
+    }
+    
+    /// <summary>
+    /// Validates that all enemy prefabs have the Enemy component configured
+    /// </summary>
+    void ValidateEnemyPrefabs()
+    {
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        {
+            Debug.LogWarning("EnemySpawner: No enemy prefabs assigned! Enemies will not spawn.");
+            return;
+        }
+        
+        for (int i = 0; i < enemyPrefabs.Length; i++)
+        {
+            if (enemyPrefabs[i] == null)
+            {
+                Debug.LogWarning($"EnemySpawner: Enemy prefab at index {i} is null!");
+                continue;
+            }
+            
+            Enemy enemy = enemyPrefabs[i].GetComponent<Enemy>();
+            if (enemy == null)
+            {
+                Debug.LogWarning($"EnemySpawner: Prefab '{enemyPrefabs[i].name}' at index {i} does not have an Enemy component!");
+            }
+            else
+            {
+                // Validate laneWidth
+                if (enemy.laneWidth < 1 || enemy.laneWidth > 2)
+                {
+                    Debug.LogWarning($"EnemySpawner: Prefab '{enemyPrefabs[i].name}' has invalid laneWidth ({enemy.laneWidth}). Should be 1 or 2.");
+                }
+            }
+        }
+    }
+    
+    void Update()
+    {
+        // Don't spawn if game is over or no prefabs available
+        if (gameManager != null && gameManager.IsGameOver())
+        {
+            return;
+        }
+        
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        {
+            return;
+        }
+        
+        // Spawn enemy at interval
+        if (Time.time >= nextSpawnTime)
+        {
+            SpawnEnemy();
+            nextSpawnTime = Time.time + spawnInterval;
+        }
+    }
+    
+    /// <summary>
+    /// Spawns a random enemy from the prefab array with smart lane alignment
+    /// </summary>
+    void SpawnEnemy()
+    {
+        // Select random enemy prefab
+        int prefabIndex = Random.Range(0, enemyPrefabs.Length);
+        GameObject selectedPrefab = enemyPrefabs[prefabIndex];
+        
+        if (selectedPrefab == null)
+        {
+            Debug.LogWarning("EnemySpawner: Selected prefab is null at index " + prefabIndex);
+            return;
+        }
+        
+        // Get enemy component to check laneWidth
+        Enemy enemyComponent = selectedPrefab.GetComponent<Enemy>();
+        if (enemyComponent == null)
+        {
+            Debug.LogWarning("EnemySpawner: Selected prefab does not have an Enemy component");
+            return;
+        }
+        
+        // Calculate spawn position
+        float spawnZ = player != null ? player.position.z + spawnDistance : spawnDistance;
+        float spawnX = CalculateSpawnX(enemyComponent.laneWidth);
+        
+        // Preserve the prefab's Y position (for enemies at different heights)
+        float spawnY = selectedPrefab.transform.position.y;
+        
+        // Instantiate enemy
+        GameObject enemyInstance = Instantiate(selectedPrefab, new Vector3(spawnX, spawnY, spawnZ), Quaternion.identity);
+        
+        // Ensure enemy has proper tag for collision detection
+        if (!enemyInstance.CompareTag("Enemy"))
+        {
+            enemyInstance.tag = "Enemy";
+        }
+        
+        // Ensure enemy has a collider (check if prefab has one, if not add a basic one)
+        Collider collider = enemyInstance.GetComponent<Collider>();
+        if (collider == null)
+        {
+            // Add a box collider if none exists
+            BoxCollider boxCollider = enemyInstance.AddComponent<BoxCollider>();
+            boxCollider.isTrigger = true;
+            Debug.LogWarning($"EnemySpawner: Added BoxCollider to '{enemyInstance.name}' as it was missing a collider. Please add a collider to the prefab.");
+        }
+        else
+        {
+            // Ensure collider is a trigger
+            collider.isTrigger = true;
+        }
+        
+        enemyInstance.SetActive(true);
+    }
+    
+    /// <summary>
+    /// Calculates the X position for spawning based on laneWidth
+    /// laneWidth 1: spawns on one of the three lanes (-2, 0, 2)
+    /// laneWidth 2: spawns between two lanes (-1 or 1) to block both paths
+    /// </summary>
+    float CalculateSpawnX(int laneWidth)
+    {
+        if (laneWidth == 1)
+        {
+            // Spawn on one of the three fixed lanes
+            int laneIndex = Random.Range(0, lanes.Length);
+            return lanes[laneIndex];
+        }
+        else if (laneWidth == 2)
+        {
+            // Spawn between two lanes
+            // Options: between lane 0 and 1 (x = -1), or between lane 1 and 2 (x = 1)
+            int choice = Random.Range(0, 2);
+            return choice == 0 ? -1f : 1f;
+        }
+        else
+        {
+            // Fallback: default to center lane
+            Debug.LogWarning("EnemySpawner: Invalid laneWidth " + laneWidth + ", defaulting to center lane");
+            return lanes[1]; // Center lane
+        }
+    }
+}
