@@ -11,8 +11,8 @@ public class GameManager : MonoBehaviour
     public float laneWidth = 2f;
     
     [Header("Spawn Timing")]
-    [Tooltip("Initial delay before spawning starts (in seconds). Default: 2 seconds")]
-    public float initialSpawnDelay = 2f;
+    [Tooltip("Initial delay before spawning starts (in seconds). Coins/power-ups spawn after this; enemies after this + one spawn interval.")]
+    public float initialSpawnDelay = 5f;
     
     [Header("Prefabs")]
     public GameObject enemyPrefab;
