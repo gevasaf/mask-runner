@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class UIManager : MonoBehaviour
@@ -53,6 +54,13 @@ public class UIManager : MonoBehaviour
     [Header("UI Button References")]
     [Tooltip("Restart button in game over panel")]
     public Button restartButton;
+    
+    [Tooltip("Menu button (custom button for game over panel, optional)")]
+    public Button menuButton;
+    
+    [Header("Scene Settings")]
+    [Tooltip("Name of the menu scene to load when menu button is clicked (default: 'menu')")]
+    public string menuSceneName = "menu";
     
     [Tooltip("Resume button in pause panel")]
     public Button resumeButton;
@@ -553,6 +561,19 @@ public class UIManager : MonoBehaviour
                     }
                 });
             }
+            
+            // Setup menu button listener if assigned
+            if (menuButton != null)
+            {
+                // Remove existing listeners to avoid duplicates
+                menuButton.onClick.RemoveAllListeners();
+                
+                // Add listener to load menu scene
+                menuButton.onClick.AddListener(() =>
+                {
+                    LoadMenuScene();
+                });
+            }
         }
     }
     
@@ -796,6 +817,12 @@ public class UIManager : MonoBehaviour
                 Debug.LogWarning("UIManager: Restart Button is null!");
             }
             
+            // Show menu button if assigned
+            if (menuButton != null)
+            {
+                menuButton.gameObject.SetActive(true);
+            }
+            
             // Ensure panel RectTransform is properly set up
             RectTransform panelRect = gameOverPanel.GetComponent<RectTransform>();
             if (panelRect != null)
@@ -841,6 +868,12 @@ public class UIManager : MonoBehaviour
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
+        }
+        
+        // Hide menu button if assigned
+        if (menuButton != null)
+        {
+            menuButton.gameObject.SetActive(false);
         }
         
         // Re-enable HUD when game over is hidden (e.g., on restart)
@@ -1248,5 +1281,23 @@ public class UIManager : MonoBehaviour
             rectTransform.localScale = originalScale;
         }
         statusTextCoroutine = null;
+    }
+    
+    /// <summary>
+    /// Loads the menu scene when menu button is clicked
+    /// </summary>
+    public void LoadMenuScene()
+    {
+        if (string.IsNullOrEmpty(menuSceneName))
+        {
+            Debug.LogWarning("UIManager: Menu scene name is not set! Cannot load menu scene.");
+            return;
+        }
+        
+        // Resume time scale in case game was paused
+        Time.timeScale = 1f;
+        
+        // Load the menu scene
+        SceneManager.LoadScene(menuSceneName);
     }
 }
