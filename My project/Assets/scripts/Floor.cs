@@ -6,8 +6,14 @@ public class Floor : MonoBehaviour
 {
     public GameManager gameManager;
     public MeshRenderer mr;
-    
-    // Update is called once per frame
+
+    Material _floorMaterial;
+
+    void Start()
+    {
+        _floorMaterial = mr.material;
+    }
+
     void Update()
     {
         // Stop floor animation when game is over
@@ -15,8 +21,8 @@ public class Floor : MonoBehaviour
         {
             return;
         }
-        
+
         float offset = Time.time * gameManager.forwardSpeed;
-        mr.material.mainTextureOffset = new Vector2(0, -offset*22.0f/120);
+        _floorMaterial.mainTextureOffset = new Vector2(0, -offset * 22.0f / 120);
     }
 }
