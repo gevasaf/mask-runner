@@ -1,11 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-using UnityEngine.EventSystems;
 
 /// <summary>
-/// Creates two big menu buttons: New Game (loads story) and Skip Intro (loads runner).
-/// Add this to any GameObject in the menu scene (e.g. an empty "MenuController").
+/// Menu scene controller: wires up New Game and Skip Intro buttons.
+/// Use the inspector button "Create Menu UI" to build the Canvas, title, and buttons in the editor so you can edit them.
 /// </summary>
 public class MenuController : MonoBehaviour
 {
@@ -15,108 +14,67 @@ public class MenuController : MonoBehaviour
     [Tooltip("Scene to load when pressing Skip Intro")]
     public string runnerSceneName = "runner";
 
-    [Header("Button Style (optional)")]
-    [Tooltip("Width of each button")]
+    [Header("Create Menu UI (editor only)")]
+    [Tooltip("Title text and button size used when you click Create Menu UI in the inspector")]
+    public string gameTitleText = "MASK RUNNER";
     public float buttonWidth = 400f;
-    [Tooltip("Height of each button")]
     public float buttonHeight = 80f;
-    [Tooltip("Vertical gap between buttons")]
     public float buttonSpacing = 24f;
 
-    void Awake()
+    [Header("Optional references (assign or use Create Menu UI in inspector)")]
+    [Tooltip("New Game button - wired at runtime if assigned or found by name")]
+    public Button newGameButton;
+    [Tooltip("Skip Intro button - wired at runtime if assigned or found by name")]
+    public Button skipIntroButton;
+    [Tooltip("Title text above buttons (optional)")]
+    public Text titleText;
+
+    void Start()
     {
-        SetupCanvasAndButtons();
+        EnsureEventSystem();
+        ResolveAndWireButtons();
     }
 
-    void SetupCanvasAndButtons()
+    void EnsureEventSystem()
     {
-        // Ensure EventSystem exists (required for UI)
-        if (FindObjectOfType<EventSystem>() == null)
+        if (FindObjectOfType<UnityEngine.EventSystems.EventSystem>() == null)
         {
             var eventSystemGo = new GameObject("EventSystem");
-            eventSystemGo.AddComponent<EventSystem>();
-            eventSystemGo.AddComponent<StandaloneInputModule>();
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.EventSystem>();
+            eventSystemGo.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
         }
-
-        // Find or create Canvas
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            var canvasGo = new GameObject("Canvas");
-            canvas = canvasGo.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasGo.AddComponent<CanvasScaler>();
-            canvasGo.AddComponent<GraphicRaycaster>();
-        }
-
-        RectTransform canvasRect = canvas.GetComponent<RectTransform>();
-        if (canvasRect == null)
-            canvasRect = canvas.gameObject.AddComponent<RectTransform>();
-
-        // Create panel to hold buttons (top third of screen)
-        GameObject panelGo = new GameObject("MenuPanel");
-        panelGo.transform.SetParent(canvas.transform, false);
-
-        RectTransform panelRect = panelGo.AddComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0.5f, 1f);   // top center
-        panelRect.anchorMax = new Vector2(0.5f, 1f);
-        panelRect.pivot = new Vector2(0.5f, 1f);
-        panelRect.sizeDelta = new Vector2(buttonWidth + 40, buttonHeight * 2 + buttonSpacing + 40);
-        panelRect.anchoredPosition = new Vector2(0f, -50f);  // 50px from top
-
-        // Optional background
-        Image panelBg = panelGo.AddComponent<Image>();
-        panelBg.color = new Color(0.1f, 0.1f, 0.15f, 0.9f);
-
-        // --- New Game button ---
-        Button newGameBtn = CreateButton(panelGo.transform, "New Game", new Vector2(0, buttonSpacing / 2 + buttonHeight / 2));
-        newGameBtn.onClick.AddListener(OnNewGame);
-
-        // --- Skip Intro button ---
-        Button skipBtn = CreateButton(panelGo.transform, "Skip Intro", new Vector2(0, -buttonSpacing / 2 - buttonHeight / 2));
-        skipBtn.onClick.AddListener(OnSkipIntro);
     }
 
-    Button CreateButton(Transform parent, string label, Vector2 anchoredPos)
+    void ResolveAndWireButtons()
     {
-        GameObject btnGo = new GameObject(label + "Button");
-        btnGo.transform.SetParent(parent, false);
+        // Resolve New Game button
+        if (newGameButton == null)
+            newGameButton = FindButtonByName("New GameButton");
+        if (newGameButton != null)
+        {
+            newGameButton.onClick.RemoveAllListeners();
+            newGameButton.onClick.AddListener(OnNewGame);
+        }
 
-        RectTransform rect = btnGo.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(buttonWidth, buttonHeight);
-        rect.anchoredPosition = anchoredPos;
+        // Resolve Skip Intro button
+        if (skipIntroButton == null)
+            skipIntroButton = FindButtonByName("Skip IntroButton");
+        if (skipIntroButton != null)
+        {
+            skipIntroButton.onClick.RemoveAllListeners();
+            skipIntroButton.onClick.AddListener(OnSkipIntro);
+        }
+    }
 
-        Image image = btnGo.AddComponent<Image>();
-        image.color = new Color(0.25f, 0.5f, 0.85f);
-
-        Button button = btnGo.AddComponent<Button>();
-        var colors = button.colors;
-        colors.highlightedColor = new Color(0.4f, 0.65f, 1f);
-        colors.pressedColor = new Color(0.2f, 0.4f, 0.7f);
-        button.colors = colors;
-
-        // Label
-        GameObject textGo = new GameObject("Text");
-        textGo.transform.SetParent(btnGo.transform, false);
-
-        RectTransform textRect = textGo.AddComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.sizeDelta = Vector2.zero;
-        textRect.offsetMin = new Vector2(10, 10);
-        textRect.offsetMax = new Vector2(-10, -10);
-
-        Text text = textGo.AddComponent<Text>();
-        text.text = label;
-        text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        text.fontSize = 36;
-        text.alignment = TextAnchor.MiddleCenter;
-        text.color = Color.white;
-
-        return button;
+    static Button FindButtonByName(string name)
+    {
+        var all = FindObjectsOfType<Button>(true);
+        foreach (var b in all)
+        {
+            if (b.gameObject.name == name)
+                return b;
+        }
+        return null;
     }
 
     void OnNewGame()
