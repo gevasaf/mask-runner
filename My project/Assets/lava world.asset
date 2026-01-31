@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayName: "\u05E2\u05D5\u05DC\u05DD \u05D4\u05DC\u05D1\u05D4"
   enemyPrefabs:
-  - {fileID: 8517751404101509463, guid: 12042afddcb0d4a4296ba6d9c8d2617f, type: 3}
+  - {fileID: 3293732575253134941, guid: 832860a2bfdc53c46b7c3b21d14e47d5, type: 3}
   - {fileID: 467227470043590001, guid: f5f0e6cc9555d56498ba2cc7c1c2948d, type: 3}
