@@ -39,6 +39,8 @@ public class Player : MonoBehaviour
     public string slideTrigger = "slide";
     public string leftTrigger = "left";
     public string rightTrigger = "right";
+    [Tooltip("Trigger fired when player takes damage (loses life)")]
+    public string hitTrigger = "hit";
     
     private SwipeDetector swipeDetector;
     private int currentLane = 1; // 0 = left, 1 = middle, 2 = right
@@ -350,6 +352,7 @@ public class Player : MonoBehaviour
                 // Remove from set after cooldown period
                 StartCoroutine(RemoveFromRecentlyHit(rootEnemyObject));
                 
+                if (animator != null) animator.SetTrigger(hitTrigger);
                 PlaySound(hitSound);
                 gameManager.PlayerHit();
             }
