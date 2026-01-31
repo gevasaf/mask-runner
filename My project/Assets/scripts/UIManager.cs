@@ -539,7 +539,7 @@ public class UIManager : MonoBehaviour
                 TextMeshProUGUI buttonText = buttonTextObj.AddComponent<TextMeshProUGUI>();
                 buttonText.fontSize = 32;
                 buttonText.color = Color.white;
-                buttonText.text = "RESTART";
+                buttonText.text = "TRY AGAIN";
                 buttonText.alignment = TextAlignmentOptions.Center;
                 buttonText.raycastTarget = false; // Don't block button clicks
                 
@@ -563,14 +563,14 @@ public class UIManager : MonoBehaviour
                 // Remove existing listeners to avoid duplicates
                 restartButton.onClick.RemoveAllListeners();
                 
-                // Add listener to call GameManager's RestartGame
+                // Add listener to restart the scene
                 restartButton.onClick.AddListener(() =>
                 {
-                    GameManager gameManager = FindObjectOfType<GameManager>();
-                    if (gameManager != null)
-                    {
-                        gameManager.RestartGame();
-                    }
+                    // Resume time scale in case game was paused
+                    Time.timeScale = 1f;
+                    
+                    // Reload the current scene
+                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
                 });
             }
             

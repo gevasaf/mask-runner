@@ -3578,6 +3578,7 @@ MonoBehaviour:
   slideTrigger: slide
   leftTrigger: left
   rightTrigger: right
+  hitTrigger: hit
 --- !u!136 &1098829947
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -5282,6 +5283,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1799792701}
   - component: {fileID: 1799792702}
+  - component: {fileID: 1799792703}
   m_Layer: 5
   m_Name: Game over Panel
   m_TagString: Untagged
@@ -5320,6 +5322,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1799792700}
   m_CullTransparentMesh: 1
+--- !u!114 &1799792703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799792700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: 810846706c3d2e0469732e7a26583778, type: 3}
+  audioSource: {fileID: 855095004}
+  playOnEnable: 1
+  playOnStart: 0
 --- !u!1 &1848571070
 GameObject:
   m_ObjectHideFlags: 0
