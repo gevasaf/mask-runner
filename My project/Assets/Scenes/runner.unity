@@ -3563,11 +3563,11 @@ MonoBehaviour:
   footstepsAudioSource: {fileID: 1914899344}
   jumpSound: {fileID: 8300000, guid: 57e3a5f1ad3ca5f408b625431d88f6d7, type: 3}
   slideSound: {fileID: 8300000, guid: 52680e8a582a32940afbc85980df35b4, type: 3}
-  leftSound: {fileID: 8300000, guid: c877efa68f8f9694ca58480edbe8f7da, type: 3}
-  rightSound: {fileID: 8300000, guid: 690cea39200701b43bdadb5711d1c88b, type: 3}
-  collectCoinSound: {fileID: 8300000, guid: afc4f59132978b0418c3059c6da81b6d, type: 3}
-  hitSound: {fileID: 8300000, guid: ec561d43aeef9254ead6963d56e3a4eb, type: 3}
-  getPowerUpSound: {fileID: 8300000, guid: 3ad1cfa40fe33c449829f5f3866a55b5, type: 3}
+  leftSound: {fileID: 8300000, guid: 67ead1a7b028bc94ea5b5a6704b9f84f, type: 3}
+  rightSound: {fileID: 8300000, guid: f93fa8f82fb7c4d4fa52dc4762f0d4ea, type: 3}
+  collectCoinSound: {fileID: 8300000, guid: fa76eaa259a6a3f4c957b6aaec579bec, type: 3}
+  hitSound: {fileID: 8300000, guid: 85adf1c866c577044bbb593fdcd32a51, type: 3}
+  getPowerUpSound: {fileID: 8300000, guid: f7d7438dd76793348ad1c0f603118dd0, type: 3}
   laneWidth: 2
   laneSwitchSpeed: 10
   jumpHeight: 2
@@ -5508,7 +5508,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 3f06e72bbecde9b4eaa1643e84a84196, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 3ea0232cb03d9b746bb9293238ab2fc5, type: 3}
   m_PlayOnAwake: 1
   m_Volume: 0.1
   m_Pitch: 0.7
