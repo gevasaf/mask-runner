@@ -10,11 +10,18 @@ public class EnemySpawner : MonoBehaviour
     [Tooltip("Fixed lane X positions (left, center, right)")]
     private readonly float[] lanes = { -2f, 0f, 2f };
     
+    [Header("Spawn Rate Scaling")]
+    [Tooltip("Percentage increase in spawn rate per world change (0.3 = 30% faster spawning). This value is cumulative - each world change makes enemies spawn this much faster.")]
+    [Range(0f, 1f)]
+    public float spawnRateIncreasePerWorld = 0.3f;
+    
     private Transform player;
     private GameManager gameManager;
     private float nextSpawnTime = 0f;
     private float spawnDistance;
-    private float spawnInterval;
+    private float baseSpawnInterval;
+    private float currentSpawnInterval;
+    private float spawnRateMultiplier = 1f;
     private GameObject[] _activePrefabs;
     private bool _spawningEnabled = true;
     
@@ -37,14 +44,15 @@ public class EnemySpawner : MonoBehaviour
         
         // Get spawn settings from GameManager
         spawnDistance = gameManager.GetSpawnDistance();
-        spawnInterval = gameManager.GetSpawnInterval();
+        baseSpawnInterval = gameManager.GetSpawnInterval();
+        currentSpawnInterval = baseSpawnInterval;
         float initialDelay = gameManager.GetInitialSpawnDelay();
         
         _activePrefabs = enemyPrefabs != null && enemyPrefabs.Length > 0 ? enemyPrefabs : null;
         ValidateEnemyPrefabs();
         
         // Initialize spawn timer with initial delay
-        nextSpawnTime = Time.time + initialDelay + spawnInterval;
+        nextSpawnTime = Time.time + initialDelay + currentSpawnInterval;
     }
     
     /// <summary>
@@ -61,6 +69,28 @@ public class EnemySpawner : MonoBehaviour
     public void SetSpawningEnabled(bool enabled)
     {
         _spawningEnabled = enabled;
+    }
+    
+    /// <summary>
+    /// Increases the enemy spawn rate by the configured percentage. Called when player reaches a new world.
+    /// Each call makes enemies spawn faster (reduces spawn interval).
+    /// </summary>
+    public void IncreaseSpawnRate()
+    {
+        // Increase the spawn rate multiplier (e.g., 1.0 -> 1.3 -> 1.6 -> 1.9...)
+        spawnRateMultiplier += spawnRateIncreasePerWorld;
+        
+        // Calculate new spawn interval: base interval divided by multiplier
+        // This makes spawning faster (smaller interval = more frequent spawning)
+        currentSpawnInterval = baseSpawnInterval / spawnRateMultiplier;
+        
+        // Ensure spawn interval doesn't go below a minimum threshold (e.g., 0.1 seconds)
+        if (currentSpawnInterval < 0.1f)
+        {
+            currentSpawnInterval = 0.1f;
+        }
+        
+        Debug.Log($"EnemySpawner: Spawn rate increased! New spawn interval: {currentSpawnInterval:F2}s (Multiplier: {spawnRateMultiplier:F2}x)");
     }
     
     /// <summary>
@@ -114,7 +144,7 @@ public class EnemySpawner : MonoBehaviour
         if (Time.time >= nextSpawnTime)
         {
             SpawnEnemy();
-            nextSpawnTime = Time.time + spawnInterval;
+            nextSpawnTime = Time.time + currentSpawnInterval;
         }
     }
     
