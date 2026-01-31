@@ -6,6 +6,23 @@ public class Player : MonoBehaviour
 {
     [Header("References")]
     public Animator animator;
+    public AudioSource audioSource;
+
+    [Header("Audio")]
+    [Tooltip("Sound played when player jumps")]
+    public AudioClip jumpSound;
+    [Tooltip("Sound played when player slides")]
+    public AudioClip slideSound;
+    [Tooltip("Sound played when player moves left")]
+    public AudioClip leftSound;
+    [Tooltip("Sound played when player moves right")]
+    public AudioClip rightSound;
+    [Tooltip("Sound played when player collects a coin")]
+    public AudioClip collectCoinSound;
+    [Tooltip("Sound played when player gets hit (loses life)")]
+    public AudioClip hitSound;
+    [Tooltip("Sound played when player collects a power-up")]
+    public AudioClip getPowerUpSound;
 
     [Header("Lane Settings")]
     public float laneWidth = 2f;
@@ -46,6 +63,15 @@ public class Player : MonoBehaviour
             animator = GetComponent<Animator>();
             if (animator == null)
                 Debug.LogWarning("Player: No Animator assigned or found on this GameObject.");
+        }
+
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
         }
 
         swipeDetector = FindObjectOfType<SwipeDetector>();
@@ -105,21 +131,25 @@ public class Player : MonoBehaviour
                 {
                     case SwipeDetector.SwipeDirection.Up:
                         if (animator != null) animator.SetTrigger(jumpTrigger);
+                        PlaySound(jumpSound);
                         StartCoroutine(Jump());
                         break;
                         
                     case SwipeDetector.SwipeDirection.Down:
                         if (animator != null) animator.SetTrigger(slideTrigger);
+                        PlaySound(slideSound);
                         StartCoroutine(Slide());
                         break;
                         
                     case SwipeDetector.SwipeDirection.Left:
                         if (animator != null) animator.SetTrigger(leftTrigger);
+                        PlaySound(leftSound);
                         ChangeLane(-1);
                         break;
                         
                     case SwipeDetector.SwipeDirection.Right:
                         if (animator != null) animator.SetTrigger(rightTrigger);
+                        PlaySound(rightSound);
                         ChangeLane(1);
                         break;
                 }
@@ -320,6 +350,7 @@ public class Player : MonoBehaviour
                 // Remove from set after cooldown period
                 StartCoroutine(RemoveFromRecentlyHit(rootEnemyObject));
                 
+                PlaySound(hitSound);
                 gameManager.PlayerHit();
             }
         }
@@ -329,6 +360,7 @@ public class Player : MonoBehaviour
             {
                 gameManager.CollectCoin();
             }
+            PlaySound(collectCoinSound);
             Destroy(other.gameObject);
         }
     }
@@ -340,5 +372,24 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(hitCooldown);
         recentlyHitEnemies.Remove(enemyObject);
+    }
+    
+    /// <summary>
+    /// Plays a sound effect if the audio clip is assigned
+    /// </summary>
+    void PlaySound(AudioClip clip)
+    {
+        if (clip != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
+    
+    /// <summary>
+    /// Called when player collects a power-up. Plays the power-up sound.
+    /// </summary>
+    public void OnPowerUpCollected()
+    {
+        PlaySound(getPowerUpSound);
     }
 }
