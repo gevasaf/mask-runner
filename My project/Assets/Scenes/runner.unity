@@ -328,7 +328,7 @@ MonoBehaviour:
   - {fileID: 9154033923831490512, guid: 9589ff24bd62691439ef2d8f03e095ec, type: 3}
   particleBlastPrefab: {fileID: 2573418184045863947, guid: 07818a4f4637fa445bda31060360fb53, type: 3}
   player: {fileID: 0}
-  powerUpSpawnChance: 0.1
+  powerUpSpawnChance: 0.5
   enableDeveloperShortcuts: 1
   worlds:
   - {fileID: 11400000, guid: 57ccc17fcb339104695f12a703f94125, type: 2}
@@ -337,7 +337,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d57a908f96f0e4d4eaa199baca47c5ef, type: 2}
   - {fileID: 11400000, guid: 044f0b70933056641b435e7a5200ad4f, type: 2}
   - {fileID: 11400000, guid: c6fbd2cdbe76d43458a3b8b54db1ae18, type: 2}
-  worldChangeInterval: 20
+  worldChangeInterval: 30
   worldTransitionDelay: 5
   worldFadeDuration: 5
   floor: {fileID: 938347954}
@@ -5793,6 +5793,7 @@ MonoBehaviour:
   - {fileID: 8517751404101509463, guid: 56f9b9d9ee53d5b4eb9a4f5528db4496, type: 3}
   - {fileID: 7952707155549152826, guid: 26e3929ac2a3f584e99e9065ee3f00b7, type: 3}
   - {fileID: 5479445734850919616, guid: 93868d1c455365749ad6b44a87cdabce, type: 3}
+  spawnRateIncreasePerWorld: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

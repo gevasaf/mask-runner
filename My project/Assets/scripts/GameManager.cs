@@ -215,6 +215,7 @@ public class GameManager : MonoBehaviour
         if (enemySpawner != null)
         {
             enemySpawner.SetEnemyPrefabs(nextWorld.enemyPrefabs);
+            enemySpawner.IncreaseSpawnRate(); // Increase spawn rate for each new world
             enemySpawner.SetSpawningEnabled(true);
         }
         
