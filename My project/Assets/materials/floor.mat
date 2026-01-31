@@ -99,6 +99,10 @@ Material:
         m_Texture: {fileID: 2800000, guid: d110a35bb4909a941bc67c6bee89674c, type: 3}
         m_Scale: {x: 3, y: 20}
         m_Offset: {x: 0, y: 0}
+    - _Tex6:
+        m_Texture: {fileID: 2800000, guid: 85ac55597b97403c82fc6601a93cf241, type: 3}
+        m_Scale: {x: 3, y: 20}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _BumpScale: 1
@@ -116,6 +120,7 @@ Material:
     - _Opacity3: 0
     - _Opacity4: 0
     - _Opacity5: 0
+    - _Opacity6: 0
     - _Parallax: 0.02
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1

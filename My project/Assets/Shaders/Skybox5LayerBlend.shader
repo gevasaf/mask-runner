@@ -1,4 +1,4 @@
-Shader "Runner/Skybox 5 Layer Blend"
+Shader "Runner/Skybox 6 Layer Blend"
 {
     Properties
     {
@@ -7,16 +7,19 @@ Shader "Runner/Skybox 5 Layer Blend"
         _Tex3 ("Panorama 3", 2D) = "white" {}
         _Tex4 ("Panorama 4", 2D) = "white" {}
         _Tex5 ("Panorama 5", 2D) = "white" {}
+        _Tex6 ("Panorama 6", 2D) = "white" {}
         _Opacity1 ("Opacity 1", Range(0, 1)) = 1
         _Opacity2 ("Opacity 2", Range(0, 1)) = 0
         _Opacity3 ("Opacity 3", Range(0, 1)) = 0
         _Opacity4 ("Opacity 4", Range(0, 1)) = 0
         _Opacity5 ("Opacity 5", Range(0, 1)) = 0
+        _Opacity6 ("Opacity 6", Range(0, 1)) = 0
         _Rotation1 ("Rotation Y 1 (degrees)", Range(0, 360)) = 0
         _Rotation2 ("Rotation Y 2 (degrees)", Range(0, 360)) = 0
         _Rotation3 ("Rotation Y 3 (degrees)", Range(0, 360)) = 0
         _Rotation4 ("Rotation Y 4 (degrees)", Range(0, 360)) = 0
         _Rotation5 ("Rotation Y 5 (degrees)", Range(0, 360)) = 0
+        _Rotation6 ("Rotation Y 6 (degrees)", Range(0, 360)) = 0
     }
     SubShader
     {
@@ -42,10 +45,10 @@ Shader "Runner/Skybox 5 Layer Blend"
                 float3 texcoord : TEXCOORD0;
             };
 
-            sampler2D _Tex1, _Tex2, _Tex3, _Tex4, _Tex5;
-            float4 _Tex1_ST, _Tex2_ST, _Tex3_ST, _Tex4_ST, _Tex5_ST;
-            float _Opacity1, _Opacity2, _Opacity3, _Opacity4, _Opacity5;
-            float _Rotation1, _Rotation2, _Rotation3, _Rotation4, _Rotation5;
+            sampler2D _Tex1, _Tex2, _Tex3, _Tex4, _Tex5, _Tex6;
+            float4 _Tex1_ST, _Tex2_ST, _Tex3_ST, _Tex4_ST, _Tex5_ST, _Tex6_ST;
+            float _Opacity1, _Opacity2, _Opacity3, _Opacity4, _Opacity5, _Opacity6;
+            float _Rotation1, _Rotation2, _Rotation3, _Rotation4, _Rotation5, _Rotation6;
 
             v2f vert (appdata v)
             {
@@ -118,6 +121,14 @@ Shader "Runner/Skybox 5 Layer Blend"
                     fixed4 s = tex2D(_Tex5, uv5);
                     col += s * _Opacity5;
                     totalWeight += _Opacity5;
+                }
+                if (_Opacity6 > 0)
+                {
+                    float3 d6 = RotateY(dir, _Rotation6 * PI / 180.0);
+                    float2 uv6 = DirToPanoramicUV(d6) * _Tex6_ST.xy + _Tex6_ST.zw;
+                    fixed4 s = tex2D(_Tex6, uv6);
+                    col += s * _Opacity6;
+                    totalWeight += _Opacity6;
                 }
 
                 if (totalWeight > 0)

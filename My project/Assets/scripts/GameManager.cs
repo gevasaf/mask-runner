@@ -137,12 +137,12 @@ public class GameManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Build opacities for a world by index: 1 at that index, 0 for the rest (max 5 layers).
+    /// Build opacities for a world by index: 1 at that index, 0 for the rest (max 6 layers).
     /// </summary>
     static float[] OpacitiesFromWorldIndex(int worldIndex)
     {
-        float[] o = new float[5];
-        if (worldIndex >= 0 && worldIndex < 5)
+        float[] o = new float[6];
+        if (worldIndex >= 0 && worldIndex < 6)
             o[worldIndex] = 1f;
         return o;
     }
@@ -228,9 +228,9 @@ public class GameManager : MonoBehaviour
         if (worlds[targetWorldIndex] == null)
             yield break;
         
-        float[] floorStart = floor != null ? floor.GetOpacities() : new float[5];
+        float[] floorStart = floor != null ? floor.GetOpacities() : new float[6];
         float[] floorEnd = OpacitiesFromWorldIndex(targetWorldIndex);
-        float[] skyboxStart = skyboxController != null ? skyboxController.GetOpacities() : new float[5];
+        float[] skyboxStart = skyboxController != null ? skyboxController.GetOpacities() : new float[6];
         float[] skyboxEnd = OpacitiesFromWorldIndex(targetWorldIndex);
         
         float elapsed = 0f;
@@ -238,9 +238,9 @@ public class GameManager : MonoBehaviour
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / worldFadeDuration);
-            float[] floorCur = new float[5];
-            float[] skyboxCur = new float[5];
-            for (int i = 0; i < 5; i++)
+            float[] floorCur = new float[6];
+            float[] skyboxCur = new float[6];
+            for (int i = 0; i < 6; i++)
             {
                 floorCur[i] = Mathf.Lerp(floorStart[i], floorEnd[i], t);
                 skyboxCur[i] = Mathf.Lerp(skyboxStart[i], skyboxEnd[i], t);

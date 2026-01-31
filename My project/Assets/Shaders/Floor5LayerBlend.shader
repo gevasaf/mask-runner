@@ -1,4 +1,4 @@
-Shader "Runner/Floor 5 Layer Blend"
+Shader "Runner/Floor 6 Layer Blend"
 {
     Properties
     {
@@ -7,11 +7,13 @@ Shader "Runner/Floor 5 Layer Blend"
         _Tex3 ("Texture 3", 2D) = "white" {}
         _Tex4 ("Texture 4", 2D) = "white" {}
         _Tex5 ("Texture 5", 2D) = "white" {}
+        _Tex6 ("Texture 6", 2D) = "white" {}
         _Opacity1 ("Opacity 1", Range(0, 1)) = 1
         _Opacity2 ("Opacity 2", Range(0, 1)) = 0
         _Opacity3 ("Opacity 3", Range(0, 1)) = 0
         _Opacity4 ("Opacity 4", Range(0, 1)) = 0
         _Opacity5 ("Opacity 5", Range(0, 1)) = 0
+        _Opacity6 ("Opacity 6", Range(0, 1)) = 0
     }
     SubShader
     {
@@ -37,9 +39,9 @@ Shader "Runner/Floor 5 Layer Blend"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _Tex1, _Tex2, _Tex3, _Tex4, _Tex5;
-            float4 _Tex1_ST, _Tex2_ST, _Tex3_ST, _Tex4_ST, _Tex5_ST;
-            float _Opacity1, _Opacity2, _Opacity3, _Opacity4, _Opacity5;
+            sampler2D _Tex1, _Tex2, _Tex3, _Tex4, _Tex5, _Tex6;
+            float4 _Tex1_ST, _Tex2_ST, _Tex3_ST, _Tex4_ST, _Tex5_ST, _Tex6_ST;
+            float _Opacity1, _Opacity2, _Opacity3, _Opacity4, _Opacity5, _Opacity6;
 
             v2f vert (appdata v)
             {
@@ -83,6 +85,12 @@ Shader "Runner/Floor 5 Layer Blend"
                     fixed4 s = tex2D(_Tex5, i.uv * _Tex5_ST.xy + _Tex5_ST.zw);
                     col += s * _Opacity5;
                     totalWeight += _Opacity5;
+                }
+                if (_Opacity6 > 0)
+                {
+                    fixed4 s = tex2D(_Tex6, i.uv * _Tex6_ST.xy + _Tex6_ST.zw);
+                    col += s * _Opacity6;
+                    totalWeight += _Opacity6;
                 }
 
                 if (totalWeight > 0)

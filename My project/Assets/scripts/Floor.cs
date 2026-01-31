@@ -7,10 +7,10 @@ public class Floor : MonoBehaviour
     public GameManager gameManager;
     public MeshRenderer mr;
 
-    /// <summary>Shader property names for 5 textures.</summary>
-    public static readonly string[] TextureNames = { "_Tex1", "_Tex2", "_Tex3", "_Tex4", "_Tex5" };
-    /// <summary>Shader property names for 5 opacities.</summary>
-    public static readonly string[] OpacityNames = { "_Opacity1", "_Opacity2", "_Opacity3", "_Opacity4", "_Opacity5" };
+    /// <summary>Shader property names for 6 textures.</summary>
+    public static readonly string[] TextureNames = { "_Tex1", "_Tex2", "_Tex3", "_Tex4", "_Tex5", "_Tex6" };
+    /// <summary>Shader property names for 6 opacities.</summary>
+    public static readonly string[] OpacityNames = { "_Opacity1", "_Opacity2", "_Opacity3", "_Opacity4", "_Opacity5", "_Opacity6" };
 
     Material _floorMaterial;
     Vector2 _tiling = new Vector2(3f, 20f);
@@ -33,7 +33,7 @@ public class Floor : MonoBehaviour
     }
 
     /// <summary>
-    /// Set opacity for each layer by index (0-4). Only indices with opacity > 0 are sampled in the shader.
+    /// Set opacity for each layer by index (0-5). Only indices with opacity > 0 are sampled in the shader.
     /// </summary>
     public void SetOpacities(float[] opacities)
     {
@@ -41,7 +41,7 @@ public class Floor : MonoBehaviour
             _floorMaterial = mr != null ? mr.material : null;
         if (_floorMaterial == null || opacities == null)
             return;
-        for (int i = 0; i < 5 && i < opacities.Length; i++)
+        for (int i = 0; i < 6 && i < opacities.Length; i++)
         {
             if (OpacityNames[i] != null)
                 _floorMaterial.SetFloat(OpacityNames[i], Mathf.Clamp01(opacities[i]));
@@ -49,7 +49,7 @@ public class Floor : MonoBehaviour
     }
 
     /// <summary>
-    /// Apply the same tiling (and optional offset) to all 5 texture layers.
+    /// Apply the same tiling (and optional offset) to all 6 texture layers.
     /// </summary>
     public void SetTilingAndOffset(Vector2 tiling, Vector2 offset)
     {
@@ -86,10 +86,10 @@ public class Floor : MonoBehaviour
     {
         if (_floorMaterial == null)
             _floorMaterial = mr != null ? mr.material : null;
-        float[] o = new float[5];
+        float[] o = new float[6];
         if (_floorMaterial == null)
             return o;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             if (_floorMaterial.HasProperty(OpacityNames[i]))
                 o[i] = _floorMaterial.GetFloat(OpacityNames[i]);

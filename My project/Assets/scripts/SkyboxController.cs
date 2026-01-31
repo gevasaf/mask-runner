@@ -1,11 +1,11 @@
 using UnityEngine;
 
 /// <summary>
-/// Controls the 5-layer skybox blend. Assign opacities by index; only layers with opacity > 0 are sampled.
+/// Controls the 6-layer skybox blend. Assign opacities by index; only layers with opacity > 0 are sampled.
 /// </summary>
 public class SkyboxController : MonoBehaviour
 {
-    public static readonly string[] OpacityNames = { "_Opacity1", "_Opacity2", "_Opacity3", "_Opacity4", "_Opacity5" };
+    public static readonly string[] OpacityNames = { "_Opacity1", "_Opacity2", "_Opacity3", "_Opacity4", "_Opacity5", "_Opacity6" };
 
     Material _skyboxMaterial;
 
@@ -25,7 +25,7 @@ public class SkyboxController : MonoBehaviour
     }
 
     /// <summary>
-    /// Set opacity for each layer by index (0-4).
+    /// Set opacity for each layer by index (0-5).
     /// </summary>
     public void SetOpacities(float[] opacities)
     {
@@ -33,7 +33,7 @@ public class SkyboxController : MonoBehaviour
             _skyboxMaterial = RenderSettings.skybox;
         if (_skyboxMaterial == null || opacities == null)
             return;
-        for (int i = 0; i < 5 && i < opacities.Length; i++)
+        for (int i = 0; i < 6 && i < opacities.Length; i++)
         {
             if (OpacityNames[i] != null && _skyboxMaterial.HasProperty(OpacityNames[i]))
                 _skyboxMaterial.SetFloat(OpacityNames[i], Mathf.Clamp01(opacities[i]));
@@ -47,10 +47,10 @@ public class SkyboxController : MonoBehaviour
     {
         if (_skyboxMaterial == null)
             _skyboxMaterial = RenderSettings.skybox;
-        float[] o = new float[5];
+        float[] o = new float[6];
         if (_skyboxMaterial == null)
             return o;
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 6; i++)
         {
             if (_skyboxMaterial.HasProperty(OpacityNames[i]))
                 o[i] = _skyboxMaterial.GetFloat(OpacityNames[i]);
