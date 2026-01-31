@@ -316,7 +316,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6521c2dd153f0c74896f149b7d30a0f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  forwardSpeed: 30
+  forwardSpeed: 20
   spawnDistance: 30
   spawnInterval: 2
   laneWidth: 2

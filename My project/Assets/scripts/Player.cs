@@ -151,33 +151,48 @@ public class Player : MonoBehaviour
         return (lane - 1) * laneWidth; // -laneWidth, 0, laneWidth
     }
     
+    /// <summary>Ease-out: fast at start, slow at end (use when approaching the peak).</summary>
+    static float EaseOutQuad(float t)
+    {
+        return 1f - (1f - t) * (1f - t);
+    }
+
+    /// <summary>Ease-in: slow at start, fast at end (use when leaving the peak).</summary>
+    static float EaseInQuad(float t)
+    {
+        return t * t;
+    }
+
     IEnumerator Jump()
     {
         isJumping = true;
         float elapsed = 0f;
         float startY = transform.position.y;
-        
-        // Jump up
-        while (elapsed < jumpDuration / 2f)
+        float halfDuration = jumpDuration / 2f;
+
+        // Jump up — ease-out into the top (decelerate as we reach the peak)
+        while (elapsed < halfDuration)
         {
             elapsed += Time.deltaTime;
-            float progress = elapsed / (jumpDuration / 2f);
-            float y = Mathf.Lerp(startY, startY + jumpHeight, progress);
+            float progress = Mathf.Clamp01(elapsed / halfDuration);
+            float eased = EaseOutQuad(progress);
+            float y = Mathf.Lerp(startY, startY + jumpHeight, eased);
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
             yield return null;
         }
-        
-        // Fall down
+
+        // Fall down — ease-in out of the top (accelerate as we approach the ground)
         elapsed = 0f;
-        while (elapsed < jumpDuration / 2f)
+        while (elapsed < halfDuration)
         {
             elapsed += Time.deltaTime;
-            float progress = elapsed / (jumpDuration / 2f);
-            float y = Mathf.Lerp(startY + jumpHeight, originalY, progress);
+            float progress = Mathf.Clamp01(elapsed / halfDuration);
+            float eased = EaseInQuad(progress);
+            float y = Mathf.Lerp(startY + jumpHeight, originalY, eased);
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
             yield return null;
         }
-        
+
         transform.position = new Vector3(transform.position.x, originalY, transform.position.z);
         isJumping = false;
     }

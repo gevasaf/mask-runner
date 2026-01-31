@@ -35,6 +35,8 @@ public class CameraIntro : MonoBehaviour
     private float startTime;
     private bool introDone;
     private MonoBehaviour followController;
+    /// <summary>Orbit center fixed at target position when intro started (player movement doesn't shift the orbit).</summary>
+    private Vector3 orbitCenter;
 
     void Start()
     {
@@ -53,7 +55,8 @@ public class CameraIntro : MonoBehaviour
             return;
         }
 
-        Vector3 playerPos = lookAtTarget.position;
+        orbitCenter = lookAtTarget.position;
+        Vector3 playerPos = orbitCenter;
 
         // Record end state: distance, angle, pitch from player
         Vector3 offset = camTransform.position - playerPos;
@@ -107,8 +110,7 @@ public class CameraIntro : MonoBehaviour
         float angle = Mathf.LerpAngle(startAngle, endAngleOrbit, t);
         float pitch = Mathf.Lerp(startPitch, endPitch, t);
 
-        Vector3 playerPos = lookAtTarget.position;
-        camTransform.position = playerPos + SphericalToCartesian(dist, angle, pitch);
+        camTransform.position = orbitCenter + SphericalToCartesian(dist, angle, pitch);
 
         // Slerp rotation (from negated start so we take the other arc), then strip roll so horizon stays level (z rotation = 0)
         Quaternion slerped = Quaternion.Slerp(startRotationSlerp, endRotation, t);
@@ -118,7 +120,7 @@ public class CameraIntro : MonoBehaviour
 
         if (t >= 1f)
         {
-            camTransform.position = playerPos + SphericalToCartesian(endDistance, endAngle, endPitch);
+            camTransform.position = orbitCenter + SphericalToCartesian(endDistance, endAngle, endPitch);
             camTransform.rotation = endRotation;
             introDone = true;
             if (followController != null)
