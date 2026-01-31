@@ -73,8 +73,8 @@ public class PowerUpItem : MonoBehaviour
             return;
         }
         
-        // Move backward (toward player)
-        transform.Translate(Vector3.back * forwardSpeed * Time.deltaTime);
+        // Move backward (toward player) in world space
+        transform.Translate(Vector3.back * forwardSpeed * Time.deltaTime, Space.World);
         
         // Destroy when off screen
         if (transform.position.z < -10f)

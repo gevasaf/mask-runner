@@ -5,7 +5,6 @@ public class Coin : MonoBehaviour
     private float forwardSpeed = 10f;
     private GameManager gameManager;
     private float rotationSpeed = 180f;
-    private static Material yellowMaterial; // Shared material for all coins
     
     void Start()
     {
@@ -13,19 +12,6 @@ public class Coin : MonoBehaviour
         if (gameManager != null)
         {
             forwardSpeed = gameManager.GetForwardSpeed();
-        }
-        
-        // Make coin yellow/gold - use shared material to avoid allocations
-        Renderer renderer = GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            // Create shared material only once
-            if (yellowMaterial == null)
-            {
-                yellowMaterial = new Material(Shader.Find("Standard"));
-                yellowMaterial.color = Color.yellow;
-            }
-            renderer.material = yellowMaterial;
         }
         
         // Add collider if not present

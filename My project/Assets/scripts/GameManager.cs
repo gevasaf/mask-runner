@@ -15,9 +15,9 @@ public class GameManager : MonoBehaviour
     public float initialSpawnDelay = 5f;
     
     [Header("Prefabs")]
-    public GameObject enemyPrefab;
     public GameObject coinPrefab;
-    public GameObject powerUpPrefab;
+    [Tooltip("Power-up prefabs: [0] MilkCup, [1] ChocoCup, [2] Bandage. Put prefabs in Assets/prefabs/.")]
+    public GameObject[] powerUpPrefabs = new GameObject[3];
     
     [Header("Player Reference")]
     public Transform player;
@@ -88,7 +88,6 @@ public class GameManager : MonoBehaviour
         }
         
         // Create prefabs if they don't exist
-        // Note: enemyPrefab is deprecated - enemies are now spawned by EnemySpawner
         if (coinPrefab == null)
         {
             CreateCoinPrefab();
@@ -311,64 +310,6 @@ public class GameManager : MonoBehaviour
         }
     }
     
-    void SpawnEnemy(float zPos)
-    {
-        if (enemyPrefab == null)
-        {
-            Debug.LogWarning("GameManager: enemyPrefab is null. Cannot spawn enemy.");
-            return;
-        }
-        
-        // Instantiate enemy from prefab
-        GameObject enemyObj = Instantiate(enemyPrefab);
-        
-        // Get enemy component to check laneWidth
-        Enemy enemy = enemyObj.GetComponent<Enemy>();
-        if (enemy == null)
-        {
-            Debug.LogWarning("GameManager: enemyPrefab does not have an Enemy component.");
-            Destroy(enemyObj);
-            return;
-        }
-        
-        // Calculate spawn X position based on laneWidth using smart lane alignment
-        float spawnX = CalculateEnemySpawnX(enemy.laneWidth);
-        
-        // Set position and activate
-        enemyObj.transform.position = new Vector3(spawnX, enemyObj.transform.position.y, zPos);
-        enemyObj.SetActive(true);
-    }
-    
-    /// <summary>
-    /// Calculates the X position for spawning an enemy based on laneWidth
-    /// laneWidth 1: spawns on one of the three lanes (-2, 0, 2)
-    /// laneWidth 2: spawns between two lanes (-1 or 1) to block both paths
-    /// </summary>
-    float CalculateEnemySpawnX(int laneWidth)
-    {
-        float[] lanes = { -2f, 0f, 2f };
-        
-        if (laneWidth == 1)
-        {
-            // Spawn on one of the three fixed lanes
-            int laneIndex = Random.Range(0, lanes.Length);
-            return lanes[laneIndex];
-        }
-        else if (laneWidth == 2)
-        {
-            // Spawn between two lanes
-            // Options: between lane 0 and 1 (x = -1), or between lane 1 and 2 (x = 1)
-            int choice = Random.Range(0, 2);
-            return choice == 0 ? -1f : 1f;
-        }
-        else
-        {
-            // Fallback: default to center lane
-            Debug.LogWarning("GameManager: Invalid laneWidth " + laneWidth + ", defaulting to center lane");
-            return lanes[1]; // Center lane
-        }
-    }
-    
     void SpawnCoin(float zPos)
     {
         GameObject coinObj;
@@ -584,16 +525,6 @@ public class GameManager : MonoBehaviour
         return coins;
     }
     
-    void CreateEnemyPrefab()
-    {
-        GameObject enemy = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        enemy.name = "EnemyPrefab";
-        enemy.AddComponent<Enemy>();
-        enemy.tag = "Enemy";
-        enemy.SetActive(false);
-        enemyPrefab = enemy;
-    }
-    
     void CreateCoinPrefab()
     {
         GameObject coin = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -613,58 +544,44 @@ public class GameManager : MonoBehaviour
     public void SpawnPowerUpItem(PowerUpItem.ItemType itemType, float zPos)
     {
         GameObject powerUpObj;
-        
-        if (powerUpPrefab != null)
+        int typeIndex = (int)itemType;
+        GameObject prefab = (powerUpPrefabs != null && typeIndex >= 0 && typeIndex < powerUpPrefabs.Length)
+            ? powerUpPrefabs[typeIndex]
+            : null;
+
+        if (prefab != null)
         {
-            powerUpObj = Instantiate(powerUpPrefab);
+            powerUpObj = Instantiate(prefab);
             powerUpObj.SetActive(true);
         }
         else
         {
-            // Create a sphere as power-up item
+            // Fallback: create a sphere as power-up item
             powerUpObj = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             powerUpObj.AddComponent<PowerUpItem>();
         }
-        
+
         PowerUpItem powerUp = powerUpObj.GetComponent<PowerUpItem>();
         if (powerUp == null)
         {
             powerUp = powerUpObj.AddComponent<PowerUpItem>();
         }
-        
+
         powerUp.itemType = itemType;
-        
+
         // Random lane
         int lane = Random.Range(0, 3);
         float xPos = (lane - 1) * laneWidth;
-        
+
         // Random position (Up or Down only)
         int posType = Random.Range(0, 2);
         powerUp.position = (PowerUpItem.PowerUpPosition)posType;
-        
+
         // Set initial position (will be adjusted by SetupPowerUp)
         powerUpObj.transform.position = new Vector3(xPos, 0f, zPos);
-        
+
         // Setup power-up (this will set the correct Y position based on position type)
         powerUp.SetupPowerUp();
-        
-        // Set visual color based on type
-        Renderer renderer = powerUpObj.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            switch (itemType)
-            {
-                case PowerUpItem.ItemType.MilkCup:
-                    renderer.material.color = Color.white;
-                    break;
-                case PowerUpItem.ItemType.ChocoCup:
-                    renderer.material.color = new Color(0.4f, 0.2f, 0.1f); // Brown
-                    break;
-                case PowerUpItem.ItemType.Bandage:
-                    renderer.material.color = new Color(1f, 0.5f, 0f); // Orange
-                    break;
-            }
-        }
     }
     
     /// <summary>
