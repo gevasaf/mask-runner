@@ -713,4 +713,12 @@ public class GameManager : MonoBehaviour
     {
         return isInvincible;
     }
+    
+    /// <summary>
+    /// Check if speed boost (ChocoCup) is currently active
+    /// </summary>
+    public bool IsSpeedBoostActive()
+    {
+        return isSpeedBoostActive;
+    }
 }
