@@ -475,6 +475,7 @@ GameObject:
   - component: {fileID: 155964107}
   - component: {fileID: 155964109}
   - component: {fileID: 155964108}
+  - component: {fileID: 155964110}
   m_Layer: 5
   m_Name: desert title
   m_TagString: Untagged
@@ -598,6 +599,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 155964106}
   m_CullTransparentMesh: 1
+--- !u!114 &155964110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 155964106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: 670d22aa9571e744a9e05a8a1e1a1a5b, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &216962461
 GameObject:
   m_ObjectHideFlags: 0
@@ -609,6 +624,7 @@ GameObject:
   - component: {fileID: 216962462}
   - component: {fileID: 216962464}
   - component: {fileID: 216962463}
+  - component: {fileID: 216962465}
   m_Layer: 5
   m_Name: 'CocoCup title '
   m_TagString: Untagged
@@ -732,6 +748,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 216962461}
   m_CullTransparentMesh: 1
+--- !u!114 &216962465
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 216962461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: d6bd6186dbed552418d3c20c3b5074ad, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &243053279
 GameObject:
   m_ObjectHideFlags: 0
@@ -743,6 +773,7 @@ GameObject:
   - component: {fileID: 243053280}
   - component: {fileID: 243053282}
   - component: {fileID: 243053281}
+  - component: {fileID: 243053283}
   m_Layer: 5
   m_Name: water title
   m_TagString: Untagged
@@ -866,6 +897,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 243053279}
   m_CullTransparentMesh: 1
+--- !u!114 &243053283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243053279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: beac975a0bd2f77489e26895f94169d7, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &273978945
 GameObject:
   m_ObjectHideFlags: 0
@@ -1341,6 +1386,7 @@ GameObject:
   - component: {fileID: 382476901}
   - component: {fileID: 382476903}
   - component: {fileID: 382476902}
+  - component: {fileID: 382476904}
   m_Layer: 5
   m_Name: MilkCup title
   m_TagString: Untagged
@@ -1464,6 +1510,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 382476900}
   m_CullTransparentMesh: 1
+--- !u!114 &382476904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 382476900}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: de9528949a1ae964c860aaa06d6bea31, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &413418373
 GameObject:
   m_ObjectHideFlags: 0
@@ -1879,6 +1939,7 @@ GameObject:
   - component: {fileID: 574284981}
   - component: {fileID: 574284983}
   - component: {fileID: 574284982}
+  - component: {fileID: 574284984}
   m_Layer: 5
   m_Name: lava title
   m_TagString: Untagged
@@ -2002,6 +2063,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 574284980}
   m_CullTransparentMesh: 1
+--- !u!114 &574284984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 574284980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: 43352ad4abc751f41a6f3e7c10c2b0f0, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &625504680
 GameObject:
   m_ObjectHideFlags: 0
@@ -2520,6 +2595,7 @@ GameObject:
   - component: {fileID: 847784388}
   - component: {fileID: 847784390}
   - component: {fileID: 847784389}
+  - component: {fileID: 847784391}
   m_Layer: 5
   m_Name: hammer world title
   m_TagString: Untagged
@@ -2643,6 +2719,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 847784387}
   m_CullTransparentMesh: 1
+--- !u!114 &847784391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 847784387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: 0f211a7a0e4b78747a69122a3da6242c, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &854161486
 GameObject:
   m_ObjectHideFlags: 0
@@ -3284,6 +3374,7 @@ GameObject:
   - component: {fileID: 1096585340}
   - component: {fileID: 1096585342}
   - component: {fileID: 1096585341}
+  - component: {fileID: 1096585343}
   m_Layer: 5
   m_Name: grass title
   m_TagString: Untagged
@@ -3407,6 +3498,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1096585339}
   m_CullTransparentMesh: 1
+--- !u!114 &1096585343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1096585339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: 932f50596dcf76640b828e68740cdabd, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &1098829945
 GameObject:
   m_ObjectHideFlags: 0
@@ -3440,6 +3545,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 889237331}
+  audioSource: {fileID: 0}
+  jumpSound: {fileID: 0}
+  slideSound: {fileID: 0}
+  leftSound: {fileID: 0}
+  rightSound: {fileID: 0}
+  collectCoinSound: {fileID: 0}
+  hitSound: {fileID: 0}
+  getPowerUpSound: {fileID: 0}
   laneWidth: 2
   laneSwitchSpeed: 10
   jumpHeight: 2
@@ -4574,6 +4687,7 @@ GameObject:
   - component: {fileID: 1528756235}
   - component: {fileID: 1528756237}
   - component: {fileID: 1528756236}
+  - component: {fileID: 1528756238}
   m_Layer: 5
   m_Name: Band aid title
   m_TagString: Untagged
@@ -4697,6 +4811,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1528756234}
   m_CullTransparentMesh: 1
+--- !u!114 &1528756238
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1528756234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: ae7d8a3f255bdb545a31f08a4ddc8925, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &1542328342
 GameObject:
   m_ObjectHideFlags: 0
@@ -4815,6 +4943,7 @@ GameObject:
   - component: {fileID: 1642279737}
   - component: {fileID: 1642279739}
   - component: {fileID: 1642279738}
+  - component: {fileID: 1642279740}
   m_Layer: 5
   m_Name: moon title
   m_TagString: Untagged
@@ -4938,6 +5067,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1642279736}
   m_CullTransparentMesh: 1
+--- !u!114 &1642279740
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1642279736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a2662388a2a58441b51690757f260b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  audioClip: {fileID: 8300000, guid: e2328f71fb0765b48b0ff4acacc9789b, type: 3}
+  audioSource: {fileID: 855095004}
 --- !u!1 &1668235866
 GameObject:
   m_ObjectHideFlags: 0
@@ -5035,6 +5178,7 @@ GameObject:
   - component: {fileID: 1919752512}
   - component: {fileID: 1919752514}
   - component: {fileID: 1919752513}
+  - component: {fileID: 1919752515}
   m_Layer: 5
   m_Name: Line 1 title
   m_TagString: Untagged
@@ -5159,6 +5303,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1919752511}
   m_CullTransparentMesh: 1
+--- !u!114 &1919752515
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1919752511}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6dac1b555d66e314bbb3739a6c9a5b55, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2054324100
 GameObject:
   m_ObjectHideFlags: 0

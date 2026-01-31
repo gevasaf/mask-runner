@@ -156,6 +156,12 @@ public class PowerUpItem : MonoBehaviour
                 uiManager = UIManager.Instance;
             }
             
+            // Play power-up sound on player
+            if (player != null)
+            {
+                player.OnPowerUpCollected();
+            }
+            
             // Apply power-up effect based on type
             switch (itemType)
             {
