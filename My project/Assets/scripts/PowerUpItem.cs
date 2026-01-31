@@ -162,6 +162,9 @@ public class PowerUpItem : MonoBehaviour
                 player.OnPowerUpCollected();
             }
             
+            Vector3 blastPos = transform.position;
+            float smallBlastSize = 0.6f;
+
             // Apply power-up effect based on type
             switch (itemType)
             {
@@ -170,6 +173,7 @@ public class PowerUpItem : MonoBehaviour
                     {
                         int coinsToAdd = milkCupSettings != null ? milkCupSettings.coinsToAdd : 10;
                         gameManager.AddCoins(coinsToAdd);
+                        gameManager.SpawnParticleBlast(blastPos, smallBlastSize, Color.white); // Small white
                     }
                     if (uiManager != null)
                     {
@@ -183,6 +187,7 @@ public class PowerUpItem : MonoBehaviour
                         float multiplier = chocoCupSettings != null ? chocoCupSettings.speedMultiplier : 2f;
                         float duration = chocoCupSettings != null ? chocoCupSettings.speedBoostDuration : 5f;
                         gameManager.ActivateSpeedBoost(multiplier, duration);
+                        gameManager.SpawnParticleBlast(blastPos, smallBlastSize, new Color(0.6f, 0.3f, 0.1f)); // Small brown
                     }
                     if (uiManager != null)
                     {
@@ -195,6 +200,7 @@ public class PowerUpItem : MonoBehaviour
                     {
                         int livesToAdd = bandageSettings != null ? bandageSettings.livesToAdd : 1;
                         gameManager.AddLives(livesToAdd);
+                        gameManager.SpawnParticleBlast(blastPos, smallBlastSize, Color.green); // Small green
                     }
                     if (uiManager != null)
                     {

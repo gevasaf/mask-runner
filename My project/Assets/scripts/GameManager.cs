@@ -18,6 +18,8 @@ public class GameManager : MonoBehaviour
     public GameObject coinPrefab;
     [Tooltip("Power-up prefabs: [0] MilkCup, [1] ChocoCup, [2] Bandage. Put prefabs in Assets/prefabs/.")]
     public GameObject[] powerUpPrefabs = new GameObject[3];
+    [Tooltip("Particle blast prefab (must have ParticleBlast + ParticleSystem). Used for collect/hit feedback.")]
+    public GameObject particleBlastPrefab;
     
     [Header("Player Reference")]
     public Transform player;
@@ -720,5 +722,21 @@ public class GameManager : MonoBehaviour
     public bool IsSpeedBoostActive()
     {
         return isSpeedBoostActive;
+    }
+
+    /// <summary>
+    /// Spawn a one-shot particle blast at the given position with size and color.
+    /// Requires particleBlastPrefab to be assigned (prefab with ParticleBlast + ParticleSystem).
+    /// </summary>
+    public void SpawnParticleBlast(Vector3 position, float size, Color color)
+    {
+        if (particleBlastPrefab == null)
+            return;
+        GameObject go = Instantiate(particleBlastPrefab, position, Quaternion.identity);
+        ParticleBlast pb = go.GetComponent<ParticleBlast>();
+        if (pb != null)
+            pb.Initialize(size, color);
+        else
+            Destroy(go);
     }
 }

@@ -25,6 +25,8 @@ public class Player : MonoBehaviour
     public AudioClip collectCoinSound;
     [Tooltip("Sound played when player gets hit (loses life)")]
     public AudioClip hitSound;
+    [Tooltip("Sound played when player destroys an enemy with chocolate milk")]
+    public AudioClip enemyDestroyedByChocoSound;
     [Tooltip("Sound played when player collects a power-up")]
     public AudioClip getPowerUpSound;
 
@@ -436,6 +438,18 @@ public class Player : MonoBehaviour
                 }
             }
             
+            // With chocolate milk: destroy enemy, big purple blast, play sound
+            if (gameManager != null && gameManager.IsSpeedBoostActive())
+            {
+                recentlyHitEnemies.Add(rootEnemyObject);
+                StartCoroutine(RemoveFromRecentlyHit(rootEnemyObject));
+                Vector3 blastPos = rootEnemyObject.transform.position;
+                gameManager.SpawnParticleBlast(blastPos, 2.5f, new Color(0.5f, 0f, 0.5f)); // Big purple
+                PlaySound(enemyDestroyedByChocoSound);
+                Destroy(rootEnemyObject);
+                return;
+            }
+
             if (canCollide && gameManager != null && !gameManager.IsInvincible())
             {
                 // Mark this enemy as recently hit (using root object)
@@ -447,13 +461,23 @@ public class Player : MonoBehaviour
                 if (animator != null) animator.SetTrigger(hitTrigger);
                 PlaySound(hitSound);
                 gameManager.PlayerHit();
+
+                // Not game over: destroy enemy and medium red blast
+                if (!gameManager.IsGameOver())
+                {
+                    Vector3 blastPos = rootEnemyObject.transform.position;
+                    gameManager.SpawnParticleBlast(blastPos, 1.2f, Color.red); // Medium red
+                    Destroy(rootEnemyObject);
+                }
             }
         }
         else if (other.CompareTag("Coin"))
         {
+            Vector3 blastPos = other.transform.position;
             if (gameManager != null)
             {
                 gameManager.CollectCoin();
+                gameManager.SpawnParticleBlast(blastPos, 0.6f, Color.yellow); // Small yellow
             }
             PlaySound(collectCoinSound);
             Destroy(other.gameObject);
