@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
     public float powerUpSpawnChance = 0.1f;
     
     [Header("Developer Settings")]
-    [Tooltip("Enable developer shortcuts (Z=MilkCup, X=ChocoCup, C=Bandage)")]
+    [Tooltip("Enable developer shortcuts (Z=MilkCup, X=ChocoCup, C=Bandage, N=New World)")]
     public bool enableDeveloperShortcuts = true;
     
     [Header("Worlds")]
@@ -47,6 +47,8 @@ public class GameManager : MonoBehaviour
     public Floor floor;
     public SkyboxController skyboxController;
     public EnemySpawner enemySpawner;
+    [Tooltip("Audio mixer snapshot manager for world-based audio transitions")]
+    public AudioMixerSnapshotManager audioMixerSnapshotManager;
     
     private int lives = 3;
     private int coins = 0;
@@ -103,6 +105,11 @@ public class GameManager : MonoBehaviour
         {
             currentWorldIndex = 0;
             ApplyWorld(0);
+            // Set initial world snapshot (instant transition at start)
+            if (audioMixerSnapshotManager != null && worlds[0] != null)
+            {
+                audioMixerSnapshotManager.OnWorldChanged(0, worlds[0].displayName, 0f);
+            }
             nextWorldChangeTime = Time.time + worldChangeInterval;
         }
         
@@ -211,7 +218,25 @@ public class GameManager : MonoBehaviour
         if (uiManager != null)
             uiManager.ShowWorldTitle(nextIndex, 2f);
         
-        // 3. Set spawner to new world and turn back on
+        // 3. Transition audio mixer snapshot for new world (0.6 second fade)
+        if (audioMixerSnapshotManager != null && nextWorld != null)
+        {
+            Debug.Log($"GameManager: Calling OnWorldChanged on AudioMixerSnapshotManager - World Index: {nextIndex}, Name: {nextWorld.displayName}");
+            audioMixerSnapshotManager.OnWorldChanged(nextIndex, nextWorld.displayName, 0.6f);
+        }
+        else
+        {
+            if (audioMixerSnapshotManager == null)
+            {
+                Debug.LogWarning("GameManager: audioMixerSnapshotManager is null! Cannot transition audio snapshot.");
+            }
+            if (nextWorld == null)
+            {
+                Debug.LogWarning($"GameManager: nextWorld is null for index {nextIndex}! Cannot transition audio snapshot.");
+            }
+        }
+        
+        // 4. Set spawner to new world and turn back on
         if (enemySpawner != null)
         {
             enemySpawner.SetEnemyPrefabs(nextWorld.enemyPrefabs);
@@ -282,6 +307,30 @@ public class GameManager : MonoBehaviour
             // Spawn Bandage
             SpawnPowerUpItem(PowerUpItem.ItemType.Bandage, spawnZ);
         }
+        else if (Input.GetKeyDown(KeyCode.N))
+        {
+            // Transition to new world
+            ForceWorldTransition();
+        }
+    }
+    
+    /// <summary>
+    /// Force an immediate world transition (developer tool)
+    /// </summary>
+    void ForceWorldTransition()
+    {
+        // Don't transition if already transitioning or no worlds available
+        if (isWorldTransitioning || worlds == null || worlds.Length <= 1)
+        {
+            Debug.LogWarning("GameManager: Cannot transition - already transitioning or insufficient worlds.");
+            return;
+        }
+        
+        // Stop the automatic world change timer
+        nextWorldChangeTime = Time.time + worldChangeInterval;
+        
+        // Start the transition coroutine
+        StartCoroutine(WorldTransitionCoroutine());
     }
     
     void SpawnObstacles()
@@ -451,6 +500,11 @@ public class GameManager : MonoBehaviour
         {
             currentWorldIndex = 0;
             ApplyWorld(0);
+            // Reset audio mixer snapshot to initial world
+            if (audioMixerSnapshotManager != null && worlds[0] != null)
+            {
+                audioMixerSnapshotManager.OnWorldChanged(0, worlds[0].displayName, 0f);
+            }
             nextWorldChangeTime = Time.time + worldChangeInterval;
             isWorldTransitioning = false;
             if (enemySpawner != null)
