@@ -7,6 +7,10 @@ public class Player : MonoBehaviour
     [Header("References")]
     public Animator animator;
     public AudioSource audioSource;
+    
+    [Header("Footsteps Audio")]
+    [Tooltip("The AudioSource for the running footsteps loop. Assign this in the Inspector.")]
+    public AudioSource footstepsAudioSource;
 
     [Header("Audio")]
     [Tooltip("Sound played when player jumps")]
@@ -56,6 +60,11 @@ public class Player : MonoBehaviour
     private HashSet<GameObject> recentlyHitEnemies = new HashSet<GameObject>();
     private float hitCooldown = 0.5f; // Cooldown time in seconds
     
+    // Footsteps audio settings
+    private float originalFootstepsVolume = 1f;
+    private float originalFootstepsPitch = 1f;
+    private bool footstepsWasPlaying = false;
+    
     void Start()
     {
         if (animator == null)
@@ -88,6 +97,14 @@ public class Player : MonoBehaviour
         originalScaleY = originalScale.y;
         targetX = GetLaneX(currentLane);
         
+        // Store original footsteps audio settings
+        if (footstepsAudioSource != null)
+        {
+            originalFootstepsVolume = footstepsAudioSource.volume;
+            originalFootstepsPitch = footstepsAudioSource.pitch;
+            footstepsWasPlaying = footstepsAudioSource.isPlaying;
+        }
+        
         // Ensure player has collider and tag
         if (GetComponent<Collider>() == null)
         {
@@ -113,6 +130,36 @@ public class Player : MonoBehaviour
     {
         HandleInput();
         UpdateMovement();
+        UpdateFootstepsAudio();
+    }
+    
+    /// <summary>
+    /// Updates footsteps audio based on ChocoCup power-up state
+    /// </summary>
+    void UpdateFootstepsAudio()
+    {
+        if (footstepsAudioSource == null || gameOver)
+            return;
+        
+        // Don't modify audio if player is jumping (volume is handled in Jump coroutine)
+        if (isJumping)
+            return;
+        
+        // Check if ChocoCup (speed boost) is active
+        bool isChocoCupActive = gameManager != null && gameManager.IsSpeedBoostActive();
+        
+        if (isChocoCupActive)
+        {
+            // ChocoCup active: volume = 0.6, pitch = 1.3
+            footstepsAudioSource.volume = 0.6f;
+            footstepsAudioSource.pitch = 1.3f;
+        }
+        else
+        {
+            // Normal state: restore original settings
+            footstepsAudioSource.volume = originalFootstepsVolume;
+            footstepsAudioSource.pitch = originalFootstepsPitch;
+        }
     }
     
     void HandleInput()
@@ -196,6 +243,13 @@ public class Player : MonoBehaviour
     IEnumerator Jump()
     {
         isJumping = true;
+        
+        // Set footsteps volume to 0 when jumping
+        if (footstepsAudioSource != null)
+        {
+            footstepsAudioSource.volume = 0f;
+        }
+        
         float elapsed = 0f;
         float startY = transform.position.y;
         float halfDuration = jumpDuration / 2f;
@@ -225,6 +279,23 @@ public class Player : MonoBehaviour
 
         transform.position = new Vector3(transform.position.x, originalY, transform.position.z);
         isJumping = false;
+        
+        // Restore footsteps volume when back on ground
+        if (footstepsAudioSource != null)
+        {
+            // Check if ChocoCup is active to determine what volume to restore
+            bool isChocoCupActive = gameManager != null && gameManager.IsSpeedBoostActive();
+            if (isChocoCupActive)
+            {
+                footstepsAudioSource.volume = 0.6f;
+                footstepsAudioSource.pitch = 1.3f;
+            }
+            else
+            {
+                footstepsAudioSource.volume = originalFootstepsVolume;
+                footstepsAudioSource.pitch = originalFootstepsPitch;
+            }
+        }
     }
     
     IEnumerator Slide()
@@ -282,6 +353,27 @@ public class Player : MonoBehaviour
     public void SetGameOver(bool isOver)
     {
         gameOver = isOver;
+        
+        if (footstepsAudioSource != null)
+        {
+            if (isOver)
+            {
+                // Disable footsteps audio on game over
+                footstepsAudioSource.enabled = false;
+                footstepsAudioSource.Stop();
+            }
+            else
+            {
+                // Re-enable footsteps audio on game restart
+                footstepsAudioSource.enabled = true;
+                footstepsAudioSource.volume = originalFootstepsVolume;
+                footstepsAudioSource.pitch = originalFootstepsPitch;
+                if (footstepsWasPlaying)
+                {
+                    footstepsAudioSource.Play();
+                }
+            }
+        }
     }
     
     void OnTriggerEnter(Collider other)
